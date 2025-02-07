@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos globais customizados */
+body {
+  @apply bg-zax-bg text-zax-text;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  @apply min-h-screen;
+}
+
+/* Reset de estilos padrão */
+button {
+  @apply cursor-pointer;
+}
+
+a {
+  @apply no-underline;
+}
