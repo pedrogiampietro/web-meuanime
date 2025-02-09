@@ -5,11 +5,16 @@ import {
   addToFavorites,
   removeFromFavorites,
 } from "../../store/features/favorites/favoritesSlice";
-import { MediaContent } from "../../types/media";
 import { Link, useNavigate } from "react-router-dom";
 
-interface MediaCardProps extends MediaContent {
-  episodeNumber?: number;
+interface MediaCardProps {
+  id: number;
+  title: string;
+  imageUrl: string;
+  type: "movie" | "series" | "episode";
+  episodeId?: string;
+  rating?: number | string;
+  year?: number;
 }
 
 export function MediaCard(props: MediaCardProps) {
@@ -19,27 +24,34 @@ export function MediaCard(props: MediaCardProps) {
   const isFavorite = favorites.some((item) => item.id === props.id);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Previne a navegação quando clicar no botão de favorito
+    e.stopPropagation();
     if (isFavorite) {
       dispatch(removeFromFavorites(props.id));
     } else {
-      dispatch(addToFavorites(props));
+      dispatch(
+        addToFavorites({
+          id: props.id,
+          title: props.title,
+          imageUrl: props.imageUrl,
+          type: props.type === "episode" ? "series" : props.type,
+          rating: String(props.rating || "0"),
+          year: props.year || new Date().getFullYear(),
+        })
+      );
     }
   };
 
-  const handleCardClick = () => {
-    // Se for um episódio, vai direto para o player
+  const handleClick = () => {
     if (props.type === "episode") {
       navigate(`/watch/${props.episodeId || props.id}`);
     } else {
-      // Se for um anime, vai para a página de detalhes
-      navigate(`/anime/${props.id}`);
+      navigate(`/details/${props.id}`);
     }
   };
 
   return (
     <div
-      onClick={handleCardClick}
+      onClick={handleClick}
       className="group relative rounded-lg overflow-hidden cursor-pointer"
     >
       <img
@@ -64,7 +76,7 @@ export function MediaCard(props: MediaCardProps) {
               to={
                 props.type === "episode"
                   ? `/watch/${props.episodeId || props.id}`
-                  : `/anime/${props.id}`
+                  : `/details/${props.id}`
               }
               onClick={(e) => e.stopPropagation()}
               className="flex items-center gap-2 bg-zax-primary text-white px-4 py-2 rounded-lg hover:bg-zax-primary/90 transition-colors"

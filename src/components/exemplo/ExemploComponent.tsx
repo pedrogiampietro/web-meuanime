@@ -1,18 +1,11 @@
-import React from "react";
 import { useStore } from "../../store/useStore";
 
-const ExemploComponent: React.FC = () => {
-  const { user, isAuthenticated, setUser } = useStore();
+export function ExemploComponent() {
+  const { user, isAuthenticated } = useStore();
 
-  return (
-    <div>
-      {isAuthenticated ? (
-        <div>Bem-vindo, {user.name}!</div>
-      ) : (
-        <div>Por favor, faça login</div>
-      )}
-    </div>
-  );
-};
+  if (!isAuthenticated) {
+    return <div>Por favor, faça login para continuar.</div>;
+  }
 
-export default ExemploComponent;
+  return <div>Bem-vindo, {user?.name || "Usuário"}!</div>;
+}

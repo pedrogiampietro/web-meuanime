@@ -4,8 +4,11 @@ import type {
   Recent,
   Search,
   TopAiring,
-  Watch,
 } from "../types/consumet";
+import // ... other imports
+// Remove Watch from here
+"@consumet/extensions";
+import type { IAnimeEpisode } from "@consumet/extensions";
 
 export interface AnimeDetails {
   id: string;
@@ -45,6 +48,14 @@ const fetchWithHeaders = async (url: string) => {
   return response.json();
 };
 
+interface AdaptedEpisode {
+  id: string;
+  number: string;
+  title: string;
+  url: string;
+  thumbnail: string;
+}
+
 // Adaptar a resposta da API do Enime para nosso formato
 const adaptAnimeData = (data: any): AnimeInfo => {
   console.log("📝 Adapting anime data:", data);
@@ -64,12 +75,16 @@ const adaptAnimeData = (data: any): AnimeInfo => {
   };
 
   const episodeCount = attrs.episodeCount || 0;
-  const episodes = Array.from({ length: episodeCount }, (_, i) => ({
-    id: `${animeData.id}-${i + 1}`,
-    number: String(i + 1),
-    title: `Episode ${i + 1}`,
-    thumbnail: getEpisodeThumbnail(i + 1),
-  }));
+  const episodes: AdaptedEpisode[] = Array.from(
+    { length: episodeCount },
+    (_, i) => ({
+      id: `${animeData.id}-${i + 1}`,
+      number: String(i + 1),
+      title: `Episode ${i + 1}`,
+      url: "", // Add required field
+      thumbnail: getEpisodeThumbnail(i + 1),
+    })
+  );
 
   const result = {
     id: animeData.id,
@@ -105,7 +120,16 @@ const adaptAnimeData = (data: any): AnimeInfo => {
 
   console.log("✨ Adapted result:", result);
   console.log("✨ Cover Image URL:", result.coverImage); // Para debug
-  return result;
+  return {
+    ...result,
+    url: "",
+    subOrDub: "sub",
+    totalEpisodes: result.episodes.length,
+    episodes: episodes.map((ep) => ({
+      ...ep,
+      number: parseInt(ep.number) || 0,
+    })) as IAnimeEpisode[],
+  } as unknown as AnimeInfo;
 };
 
 interface Source {

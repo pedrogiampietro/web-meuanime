@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MdFavorite, MdFavoriteBorder, MdPlayArrow } from "react-icons/md";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -7,18 +7,38 @@ import {
   removeFromFavorites,
 } from "../store/features/favorites/favoritesSlice";
 import { animeApi } from "../services/api";
-import type { AnimeDetails as IAnimeDetails } from "../services/api";
 
-export function AnimeDetails() {
+interface AnimeDetailsState {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  image: string;
+  coverImage: string;
+  genres: string[];
+  type: string;
+  status: string;
+  releaseDate: string;
+  rating: string;
+  episodes: {
+    id: string;
+    number: string;
+    title: string;
+    thumbnail: string;
+  }[];
+  duration: string;
+  year?: number;
+  synopsis?: string;
+}
+
+export const AnimeDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [animeData, setAnimeData] = useState<IAnimeDetails | null>(null);
+  const [animeData, setAnimeData] = useState<AnimeDetailsState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
-  const isFavorite = favorites.some(
-    (item) => item.id === id && id !== undefined
-  );
+  const isFavorite = favorites.some((item) => Number(item.id) === Number(id));
 
   useEffect(() => {
     async function loadAnimeDetails() {
@@ -27,7 +47,27 @@ export function AnimeDetails() {
       try {
         setIsLoading(true);
         const details = await animeApi.getAnimeDetails(id);
-        setAnimeData(details);
+        // Transform the API response to match AnimeDetailsState
+        setAnimeData({
+          id: details.id,
+          slug: details.url.split("/").pop() || "",
+          title: details.title,
+          description: details.description,
+          image: details.image,
+          coverImage: details.image,
+          genres: details.genres || [],
+          type: details.type,
+          status: details.status || "Unknown",
+          releaseDate: details.releaseDate,
+          rating: "N/A", // Default rating
+          episodes: details.episodes.map((ep) => ({
+            id: ep.id,
+            number: String(ep.number),
+            title: `Episode ${ep.number}`, // Default title
+            thumbnail: details.image, // Use anime image as fallback
+          })),
+          duration: "Unknown",
+        });
       } catch (err) {
         setError("Erro ao carregar detalhes do anime");
         console.error(err);
@@ -38,6 +78,44 @@ export function AnimeDetails() {
 
     loadAnimeDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (id && animeData) {
+      dispatch(
+        addToFavorites({
+          id: Number(id),
+          title: animeData.title,
+          imageUrl: animeData.image,
+          type: "series",
+          rating: "0",
+          year: animeData.releaseDate
+            ? parseInt(animeData.releaseDate)
+            : new Date().getFullYear(), // This will never be undefined
+        })
+      );
+    }
+  }, [dispatch, id, animeData]);
+
+  const handleFavoriteClick = () => {
+    if (!animeData || !id) return;
+
+    if (isFavorite) {
+      dispatch(removeFromFavorites(Number(id)));
+    } else {
+      dispatch(
+        addToFavorites({
+          id: Number(id),
+          title: animeData.title,
+          imageUrl: animeData.image,
+          type: "series",
+          rating: animeData.rating,
+          year: animeData.releaseDate
+            ? parseInt(animeData.releaseDate)
+            : new Date().getFullYear(), // Provide default value
+        })
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -97,11 +175,7 @@ export function AnimeDetails() {
               <span>Assistir Agora</span>
             </Link>
             <button
-              onClick={() =>
-                isFavorite
-                  ? dispatch(removeFromFavorites(id))
-                  : dispatch(addToFavorites({ id, ...animeData }))
-              }
+              onClick={handleFavoriteClick}
               className="flex items-center gap-2 bg-zax-button text-white px-6 py-3 rounded-lg hover:bg-zax-primary transition-colors"
             >
               {isFavorite ? (
@@ -154,4 +228,4 @@ export function AnimeDetails() {
       </div>
     </div>
   );
-}
+};

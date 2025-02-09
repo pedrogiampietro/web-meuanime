@@ -14,9 +14,9 @@ interface AuthContextType {
   modalType: ModalType;
   openAuthModal: (type: ModalType) => void;
   closeAuthModal: () => void;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  login: (email: string) => Promise<void>;
+  register: (name: string, email: string) => Promise<void>;
+  resetPassword: () => Promise<void>;
   logout: () => void;
 }
 
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Simulação de autenticação
-  const login = async (email: string, password: string) => {
+  const login = async (email: string) => {
     // Aqui você implementaria a chamada real para sua API
     const mockUser = {
       id: 1,
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     closeAuthModal();
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string) => {
     // Aqui você implementaria a chamada real para sua API
     const mockUser = {
       id: 1,
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     closeAuthModal();
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async () => {
     // Aqui você implementaria a chamada real para sua API
     await new Promise((resolve) => setTimeout(resolve, 1000)); // Simula delay
     closeAuthModal();

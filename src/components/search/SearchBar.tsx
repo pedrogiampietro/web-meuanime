@@ -1,16 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { FiSearch, FiX } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
-import { animeApi, AnimeResult } from "../../services/api";
-import { useNavigate } from "react-router-dom";
+import { animeApi } from "../../services/api";
+import type { IAnimeResult } from "@consumet/extensions";
 
 export function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState<AnimeResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [results, setResults] = useState<IAnimeResult[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const searchAnime = async () => {
@@ -20,13 +18,10 @@ export function SearchBar() {
       }
 
       try {
-        setIsLoading(true);
         const results = await animeApi.searchAnime(searchTerm);
-        setResults(results);
+        setResults(results.results || []);
       } catch (error) {
         console.error("Erro na busca:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -100,14 +95,23 @@ export function SearchBar() {
                     className="flex items-center gap-3 p-3 hover:bg-zax-button cursor-pointer transition-colors"
                   >
                     <img
-                      src={result.imageUrl}
-                      alt={result.title}
+                      src={result.image}
+                      alt={
+                        typeof result.title === "string"
+                          ? result.title
+                          : result.title.userPreferred || ""
+                      }
                       className="w-20 h-12 object-cover rounded"
                     />
                     <div>
-                      <h4 className="text-white font-medium">{result.title}</h4>
+                      <h4 className="text-white font-medium">
+                        {typeof result.title === "string"
+                          ? result.title
+                          : result.title.userPreferred || ""}
+                      </h4>
                       <p className="text-sm text-zax-text">
-                        {result.type} • {result.year}
+                        {result.type || "Unknown"} •{" "}
+                        {result.releaseDate || "Unknown"}
                       </p>
                     </div>
                   </div>

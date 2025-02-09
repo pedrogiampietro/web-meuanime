@@ -29,15 +29,11 @@ export function AuthModal() {
 
     try {
       if (modalType === "login") {
-        await login(email, password);
+        await login(email);
       } else if (modalType === "register") {
-        if (password !== confirmPassword) {
-          throw new Error("As senhas não coincidem");
-        }
-        await register(name, email, password);
-      } else if (modalType === "forgotPassword") {
-        await resetPassword(email);
-        setSuccessMessage("Email de recuperação enviado com sucesso!");
+        await register(name, email);
+      } else {
+        await resetPassword();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ocorreu um erro");

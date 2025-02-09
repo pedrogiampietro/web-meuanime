@@ -10,6 +10,7 @@ import {
   addToFavorites,
   removeFromFavorites,
 } from "../../store/features/favorites/favoritesSlice";
+import type { IAnimeResult } from "@consumet/extensions";
 
 export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -38,18 +39,22 @@ export function HeroSlider() {
     return null;
   }
 
-  const heroItems = trending.results.slice(0, 3).map((anime) => ({
-    id: anime.id,
+  const heroItems = trending.results.slice(0, 3).map((anime: IAnimeResult) => ({
+    id: Number(anime.id),
     title: anime.title,
     description: anime.genres?.join(", ") || "",
     imageUrl: anime.image,
     type: "series",
     rating: "All",
-    year: parseInt(anime.releaseDate) || new Date().getFullYear(),
+    year: anime.releaseDate
+      ? parseInt(anime.releaseDate)
+      : new Date().getFullYear(),
   }));
 
   const currentItem = heroItems[currentIndex];
-  const isFavorite = favorites.some((item) => item.id === currentItem.id);
+  const isFavorite = favorites.some(
+    (item) => Number(item.id) === Number(currentItem.id)
+  );
 
   const handlePrevious = () => {
     setCurrentIndex(
@@ -61,11 +66,23 @@ export function HeroSlider() {
     setCurrentIndex((current) => (current + 1) % heroItems.length);
   };
 
-  const handleToggleFavorite = () => {
+  const handleFavoriteClick = () => {
     if (isFavorite) {
-      dispatch(removeFromFavorites(currentItem.id));
+      dispatch(removeFromFavorites(Number(currentItem.id)));
     } else {
-      dispatch(addToFavorites(currentItem));
+      dispatch(
+        addToFavorites({
+          id: Number(currentItem.id),
+          title:
+            typeof currentItem.title === "string"
+              ? currentItem.title
+              : currentItem.title.userPreferred || "",
+          imageUrl: currentItem.imageUrl || "",
+          type: "series",
+          rating: "0",
+          year: currentItem.year,
+        })
+      );
     }
   };
 
@@ -82,13 +99,19 @@ export function HeroSlider() {
         >
           <div className="absolute inset-0 bg-gradient-to-t from-zax-bg via-transparent to-transparent" />
           <img
-            src={currentItem.imageUrl}
-            alt={currentItem.title}
+            src={currentItem.imageUrl || ""}
+            alt={
+              typeof currentItem.title === "string"
+                ? currentItem.title
+                : currentItem.title.userPreferred || ""
+            }
             className="w-full h-full object-cover"
           />
           <div className="absolute bottom-0 left-0 p-8 max-w-2xl">
             <h1 className="text-4xl font-bold text-white mb-2">
-              {currentItem.title}
+              {typeof currentItem.title === "string"
+                ? currentItem.title
+                : currentItem.title.userPreferred || ""}
             </h1>
             <p className="text-zax-text mb-6">{currentItem.description}</p>
             <div className="flex gap-4">
@@ -97,7 +120,7 @@ export function HeroSlider() {
                 <span>Assistir</span>
               </button>
               <button
-                onClick={handleToggleFavorite}
+                onClick={handleFavoriteClick}
                 className="flex items-center justify-center w-12 h-12 bg-zax-button text-white rounded-lg hover:bg-zax-primary transition-colors"
               >
                 {isFavorite ? <MdFavorite /> : <MdFavoriteBorder />}

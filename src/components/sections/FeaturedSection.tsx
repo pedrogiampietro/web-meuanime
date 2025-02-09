@@ -34,12 +34,16 @@ export function FeaturedSection() {
         {trending?.results.slice(0, 4).map((anime) => (
           <MediaCard
             key={anime.id}
-            id={anime.id}
+            id={Number(anime.id)}
             title={anime.title}
             imageUrl={anime.image}
             type="series"
             rating="All"
-            year={parseInt(anime.releaseDate) || new Date().getFullYear()}
+            year={
+              anime.releaseDate
+                ? parseInt(anime.releaseDate)
+                : new Date().getFullYear()
+            }
           />
         ))}
       </div>

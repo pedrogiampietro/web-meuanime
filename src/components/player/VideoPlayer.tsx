@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { useState, useRef, useEffect } from "react";
 import ReactPlayer from "react-player";
 import {
@@ -38,7 +40,7 @@ export function VideoPlayer({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const playerRef = useRef<ReactPlayer>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  let controlsTimeout: NodeJS.Timeout;
+  let controlsTimeout: ReturnType<typeof setTimeout>;
 
   useEffect(() => {
     const handleMouseMove = () => {

@@ -46,14 +46,13 @@ export function Home() {
             {recentEpisodes?.results.map((episode: Recent) => (
               <MediaCard
                 key={episode.id}
-                id={episode.id}
+                id={Number(episode.id)}
                 episodeId={episode.episodeId}
                 title={`${episode.title} - Episódio ${episode.episodeNumber}`}
                 imageUrl={episode.image}
                 type="episode"
                 year={new Date().getFullYear()}
-                rating="All"
-                episodeNumber={episode.episodeNumber}
+                rating="0"
               />
             ))}
           </div>
