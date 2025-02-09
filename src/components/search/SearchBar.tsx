@@ -1,50 +1,37 @@
 import { useState, useRef, useEffect } from "react";
 import { FiSearch, FiX } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
-
-interface SearchResult {
-  id: number;
-  title: string;
-  imageUrl: string;
-  type: string;
-  year: number;
-}
+import { animeApi, AnimeResult } from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 export function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<AnimeResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
-  // Simular resultados da busca
   useEffect(() => {
-    if (searchTerm.length > 0) {
-      // Aqui você conectaria com sua API real
-      const mockResults = [
-        {
-          id: 1,
-          title: "Breaking Bad",
-          imageUrl:
-            "https://placehold.co/160x90/242a4d/7f84b5/jpeg?text=Breaking+Bad",
-          type: "Série",
-          year: 2008,
-        },
-        {
-          id: 2,
-          title: "Better Call Saul",
-          imageUrl:
-            "https://placehold.co/160x90/242a4d/7f84b5/jpeg?text=Better+Call+Saul",
-          type: "Série",
-          year: 2015,
-        },
-      ].filter((item) =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    const searchAnime = async () => {
+      if (searchTerm.length < 3) {
+        setResults([]);
+        return;
+      }
 
-      setResults(mockResults);
-    } else {
-      setResults([]);
-    }
+      try {
+        setIsLoading(true);
+        const results = await animeApi.searchAnime(searchTerm);
+        setResults(results);
+      } catch (error) {
+        console.error("Erro na busca:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const debounceTimeout = setTimeout(searchAnime, 300);
+    return () => clearTimeout(debounceTimeout);
   }, [searchTerm]);
 
   // Fechar ao clicar fora

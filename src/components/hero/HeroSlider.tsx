@@ -2,130 +2,135 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlay } from "react-icons/fa";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { animeApi } from "../../services/api";
 import {
   addToFavorites,
   removeFromFavorites,
 } from "../../store/features/favorites/favoritesSlice";
-
-const HERO_ITEMS = [
-  {
-    id: 1,
-    title: "Jujutsu Kaisen",
-    description: "T2 E1 Nova Temporada",
-    imageUrl:
-      "https://placehold.co/1920x1080/242a4d/7f84b5/jpeg?text=Jujutsu+Kaisen",
-    type: "series",
-    rating: "16+",
-    year: 2023,
-  },
-  {
-    id: 2,
-    title: "Demon Slayer",
-    description: "T3 E5 Novo Episódio",
-    imageUrl:
-      "https://placehold.co/1920x1080/242a4d/7f84b5/jpeg?text=Demon+Slayer",
-    type: "series",
-    rating: "16+",
-    year: 2023,
-  },
-  {
-    id: 3,
-    title: "Attack on Titan",
-    description: "Final Season",
-    imageUrl:
-      "https://placehold.co/1920x1080/242a4d/7f84b5/jpeg?text=Attack+on+Titan",
-    type: "series",
-    rating: "18+",
-    year: 2023,
-  },
-] as const;
 
 export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
 
+  const { data: trending, isLoading } = useQuery({
+    queryKey: ["trending"],
+    queryFn: () => animeApi.getTrending(),
+  });
+
+  // Auto-play
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % HERO_ITEMS.length);
+      if (trending?.results) {
+        setCurrentIndex(
+          (current) => (current + 1) % Math.min(3, trending.results.length)
+        );
+      }
     }, 5000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [trending?.results]);
 
-  const currentItem = HERO_ITEMS[currentIndex];
+  if (isLoading || !trending) {
+    return null;
+  }
+
+  const heroItems = trending.results.slice(0, 3).map((anime) => ({
+    id: anime.id,
+    title: anime.title,
+    description: anime.genres?.join(", ") || "",
+    imageUrl: anime.image,
+    type: "series",
+    rating: "All",
+    year: parseInt(anime.releaseDate) || new Date().getFullYear(),
+  }));
+
+  const currentItem = heroItems[currentIndex];
   const isFavorite = favorites.some((item) => item.id === currentItem.id);
+
+  const handlePrevious = () => {
+    setCurrentIndex(
+      (current) => (current - 1 + heroItems.length) % heroItems.length
+    );
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((current) => (current + 1) % heroItems.length);
+  };
 
   const handleToggleFavorite = () => {
     if (isFavorite) {
       dispatch(removeFromFavorites(currentItem.id));
     } else {
-      dispatch(
-        addToFavorites({
-          ...currentItem,
-          type: currentItem.type,
-        })
-      );
+      dispatch(addToFavorites(currentItem));
     }
   };
 
   return (
-    <div className="relative h-[70vh] overflow-hidden">
-      <AnimatePresence mode="wait">
+    <div className="relative h-[600px] overflow-hidden group">
+      <AnimatePresence initial={false} mode="wait">
         <motion.div
-          key={currentItem.id}
+          key={currentIndex}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
           className="absolute inset-0"
         >
+          <div className="absolute inset-0 bg-gradient-to-t from-zax-bg via-transparent to-transparent" />
           <img
             src={currentItem.imageUrl}
             alt={currentItem.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zax-bg via-transparent to-transparent" />
-          <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="absolute bottom-0 left-0 p-8"
-          >
+          <div className="absolute bottom-0 left-0 p-8 max-w-2xl">
             <h1 className="text-4xl font-bold text-white mb-2">
               {currentItem.title}
             </h1>
-            <p className="text-zax-text text-lg mb-4">
-              {currentItem.description}
-            </p>
+            <p className="text-zax-text mb-6">{currentItem.description}</p>
             <div className="flex gap-4">
-              <button className="flex items-center gap-2 bg-zax-primary text-white px-6 py-2 rounded-lg hover:bg-zax-primary/90 transition-colors">
+              <button className="flex items-center gap-2 bg-zax-primary text-white px-6 py-3 rounded-lg hover:bg-zax-primary/90 transition-colors">
                 <FaPlay />
-                <span>Assistir Agora</span>
+                <span>Assistir</span>
               </button>
               <button
                 onClick={handleToggleFavorite}
-                className="flex items-center gap-2 bg-zax-secondary text-zax-text px-6 py-2 rounded-lg hover:text-white transition-colors"
+                className="flex items-center justify-center w-12 h-12 bg-zax-button text-white rounded-lg hover:bg-zax-primary transition-colors"
               >
                 {isFavorite ? <MdFavorite /> : <MdFavoriteBorder />}
-                <span>Minha Lista</span>
               </button>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Indicators */}
-      <div className="absolute bottom-6 right-8 flex gap-2">
-        {HERO_ITEMS.map((_, index) => (
+      {/* Navigation Buttons */}
+      <button
+        onClick={handlePrevious}
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <IoIosArrowBack size={24} />
+      </button>
+      <button
+        onClick={handleNext}
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <IoIosArrowForward size={24} />
+      </button>
+
+      {/* Dots Indicator */}
+      <div className="absolute bottom-4 right-4 flex gap-2">
+        {heroItems.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
             className={`w-2 h-2 rounded-full transition-all ${
               index === currentIndex
-                ? "w-6 bg-zax-primary"
-                : "bg-zax-text/50 hover:bg-zax-text"
+                ? "bg-zax-primary w-4"
+                : "bg-white/50 hover:bg-white"
             }`}
           />
         ))}

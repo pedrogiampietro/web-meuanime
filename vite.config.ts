@@ -7,4 +7,13 @@ export default defineConfig({
   css: {
     postcss: "./postcss.config.js",
   },
+  server: {
+    proxy: {
+      "/anime": {
+        target: "https://api.consumet.org",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/anime/, "/anime/gogoanime"),
+      },
+    },
+  },
 });

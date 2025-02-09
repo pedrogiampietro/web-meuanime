@@ -4,13 +4,13 @@ import { SearchBar } from "../search/SearchBar";
 import { Sidebar } from "./Sidebar";
 import { SidebarProvider, useSidebar } from "../../contexts/SidebarContext";
 import { motion } from "framer-motion";
+import { useAuth } from "../../contexts/AuthContext";
+import { AuthModal } from "../auth/AuthModal";
+import { FiLogOut } from "react-icons/fi";
 
-interface NetflixLayoutProps {
-  children: ReactNode;
-}
-
-function LayoutContent({ children }: NetflixLayoutProps) {
+function LayoutContent({ children }: { children: ReactNode }) {
   const { isExpanded } = useSidebar();
+  const { user, openAuthModal, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-zax-bg">
@@ -30,9 +30,25 @@ function LayoutContent({ children }: NetflixLayoutProps) {
           {/* Right Section */}
           <div className="flex items-center gap-4">
             <SearchBar />
-            <button className="bg-zax-button text-white px-4 py-2 rounded-lg hover:bg-zax-primary transition-colors">
-              Entrar
-            </button>
+            {user ? (
+              <div className="flex items-center gap-4">
+                <span className="text-white">{user.name}</span>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-2 bg-zax-button text-white px-4 py-2 rounded-lg hover:bg-zax-primary transition-colors"
+                >
+                  <FiLogOut />
+                  <span>Sair</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => openAuthModal("login")}
+                className="bg-zax-button text-white px-4 py-2 rounded-lg hover:bg-zax-primary transition-colors"
+              >
+                Entrar
+              </button>
+            )}
           </div>
         </nav>
       </header>
@@ -47,16 +63,12 @@ function LayoutContent({ children }: NetflixLayoutProps) {
         </motion.main>
       </div>
 
-      <footer className="bg-[#141414] text-gray-400 py-8 px-4">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-sm">&copy; 2024 Netflix Clone</p>
-        </div>
-      </footer>
+      <AuthModal />
     </div>
   );
 }
 
-export function NetflixLayout({ children }: NetflixLayoutProps) {
+export function NetflixLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
       <LayoutContent>{children}</LayoutContent>
