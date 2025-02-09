@@ -1,22 +1,24 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { MdFavorite, MdFavoriteBorder, MdPlayArrow } from "react-icons/md";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   addToFavorites,
   removeFromFavorites,
 } from "../store/features/favorites/favoritesSlice";
-import { animeApi, AnimeDetails as IAnimeDetails } from "../services/api";
+import { animeApi } from "../services/api";
+import type { AnimeDetails as IAnimeDetails } from "../services/api";
 
 export function AnimeDetails() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [animeData, setAnimeData] = useState<IAnimeDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
-  const isFavorite = favorites.some((item) => item.id === id);
+  const isFavorite = favorites.some(
+    (item) => item.id === id && id !== undefined
+  );
 
   useEffect(() => {
     async function loadAnimeDetails() {

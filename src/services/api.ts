@@ -7,6 +7,27 @@ import type {
   Watch,
 } from "../types/consumet";
 
+export interface AnimeDetails {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  image: string;
+  coverImage: string;
+  genres: string[];
+  type: string;
+  status: string;
+  releaseDate: string;
+  rating: string;
+  episodes: {
+    id: string;
+    number: string;
+    title: string;
+    thumbnail: string;
+  }[];
+  duration: string;
+}
+
 const API_URL = "https://kitsu.io/api/edge";
 
 const fetchWithHeaders = async (url: string) => {
@@ -45,7 +66,7 @@ const adaptAnimeData = (data: any): AnimeInfo => {
   const episodeCount = attrs.episodeCount || 0;
   const episodes = Array.from({ length: episodeCount }, (_, i) => ({
     id: `${animeData.id}-${i + 1}`,
-    number: i + 1,
+    number: String(i + 1),
     title: `Episode ${i + 1}`,
     thumbnail: getEpisodeThumbnail(i + 1),
   }));
@@ -86,6 +107,19 @@ const adaptAnimeData = (data: any): AnimeInfo => {
   console.log("✨ Cover Image URL:", result.coverImage); // Para debug
   return result;
 };
+
+interface Source {
+  url: string;
+  quality: string;
+  isM3U8: boolean;
+}
+
+interface Watch {
+  headers: {
+    Referer: string;
+  };
+  sources: Source[];
+}
 
 export const animeApi = {
   getTrending: async (page = 1): Promise<ConsumetResponse<TopAiring>> => {
@@ -184,7 +218,7 @@ export const animeApi = {
     episodeId: string,
     server = "default"
   ): Promise<Watch> => {
-    const API_BASE = "/anime"; // Usando o proxy local
+    const API_BASE = "/anime";
 
     console.log("🎬 Tentando obter fontes para episódio:", {
       episodeId,
@@ -230,8 +264,10 @@ export const animeApi = {
 
       // Formata a resposta no formato esperado
       return {
-        headers: {},
-        sources: sourcesData.sources.map((source: any) => ({
+        headers: {
+          Referer: "https://gogoanime.tel",
+        },
+        sources: sourcesData.sources.map((source: Source) => ({
           url: source.url,
           quality: source.quality,
           isM3U8: source.isM3U8,

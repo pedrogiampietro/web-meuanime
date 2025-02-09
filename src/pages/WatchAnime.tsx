@@ -4,6 +4,7 @@ import { MdArrowBack } from "react-icons/md";
 import { VideoPlayer } from "../components/player/VideoPlayer";
 import { animeApi } from "../services/api";
 import { Link } from "react-router-dom";
+import type { Watch } from "../types/consumet";
 
 export function WatchAnime() {
   const { episodeId } = useParams();
@@ -17,11 +18,14 @@ export function WatchAnime() {
       if (!episodeId) return;
 
       try {
+        setIsLoading(true);
         const data = await animeApi.getEpisodeSources(episodeId);
         setVideoSources(data);
       } catch (error) {
         console.error("Error fetching episode:", error);
         setError("Erro ao carregar o episódio");
+      } finally {
+        setIsLoading(false);
       }
     }
 
