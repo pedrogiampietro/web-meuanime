@@ -5,7 +5,8 @@ import { MediaCard } from "../components/cards/MediaCard";
 import { useQuery } from "@tanstack/react-query";
 import type { AnimeEpisode } from "../services/api";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEpisodeStore } from "../store/episodeStore";
+import { useState } from "react";
 
 interface FormattedEpisode {
   id: number;
@@ -20,16 +21,11 @@ interface FormattedEpisode {
   episodeData: AnimeEpisode;
 }
 
-interface LastWatchedEpisode extends AnimeEpisode {
-  link: string;
-}
-
 export function Home() {
   const {
     data: recentEpisodes,
     isLoading,
     isError,
-    error,
     refetch,
   } = useQuery({
     queryKey: ["recentEpisodes"],
@@ -84,45 +80,47 @@ export function Home() {
   };
 
   return (
-    <div className="relative">
-      <HeroSlider />
-      <FeaturedSection />
+    <div className="w-full">
+      <div className="px-4 md:px-16 pt-20 space-y-8">
+        <HeroSlider />
+        <FeaturedSection />
 
-      {/* Latest Episodes Section */}
-      <section className="px-8 py-6">
-        <h2 className="text-2xl font-bold text-white mb-6">
-          Últimos Episódios
-        </h2>
+        {/* Latest Episodes Section */}
+        <section className="px-8 py-6">
+          <h2 className="text-2xl font-bold text-white mb-6">
+            Últimos Episódios
+          </h2>
 
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-zax-primary border-t-transparent"></div>
-          </div>
-        ) : isError ? (
-          <div className="text-center text-zax-text py-12">
-            <p>Erro ao carregar episódios recentes</p>
-            <button
-              onClick={() => refetch()}
-              className="mt-4 text-white hover:text-zax-primary transition-colors"
-            >
-              Tentar novamente
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {recentEpisodes?.map((episode) => {
-              const formattedData = formatEpisodeData(episode);
-              return (
-                <MediaCard
-                  key={`${episode.title}-${episode.episode}`}
-                  {...formattedData}
-                  onClick={() => handleLastWatchedClick(episode)}
-                />
-              );
-            })}
-          </div>
-        )}
-      </section>
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-zax-primary border-t-transparent"></div>
+            </div>
+          ) : isError ? (
+            <div className="text-center text-zax-text py-12">
+              <p>Erro ao carregar episódios recentes</p>
+              <button
+                onClick={() => refetch()}
+                className="mt-4 text-white hover:text-zax-primary transition-colors"
+              >
+                Tentar novamente
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {recentEpisodes?.map((episode) => {
+                const formattedData = formatEpisodeData(episode);
+                return (
+                  <MediaCard
+                    key={`${episode.title}-${episode.episode}`}
+                    {...formattedData}
+                    onClick={() => handleLastWatchedClick(episode)}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

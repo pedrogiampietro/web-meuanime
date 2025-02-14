@@ -21,9 +21,10 @@ interface MediaCardProps {
   quality?: string;
   href?: string;
   episodeData?: AnimeEpisode;
+  onClick?: () => void;
 }
 
-export function MediaCard({
+export const MediaCard: React.FC<MediaCardProps> = ({
   id,
   title,
   imageUrl,
@@ -34,12 +35,12 @@ export function MediaCard({
   quality,
   href,
   episodeData,
-}: MediaCardProps) {
+  onClick,
+}) => {
   const dispatch = useAppDispatch();
   const setCurrentEpisode = useEpisodeStore((state) => state.setCurrentEpisode);
   const favorites = useAppSelector((state) => state.favorites.items);
   const isFavorite = favorites.some((item) => item.id === id);
-  const [isHovered, setIsHovered] = useState(false);
 
   const getWatchLink = () => {
     if (href) return href;
@@ -77,54 +78,37 @@ export function MediaCard({
     }
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
   return (
     <div className="group relative rounded-lg overflow-hidden">
       <Link to={getWatchLink()} onClick={handleEpisodeClick} className="block">
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-full aspect-[16/9] object-cover"
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="absolute bottom-0 p-4 w-full">
-            <h3 className="text-white font-medium mb-1">
-              {title} {type === "episode" && `- Episódio ${episodeNumber}`}
-            </h3>
-            <div className="flex items-center gap-2 text-sm text-zax-text mb-3">
-              {rating && <span>{rating}</span>}
-              {year && <span>•</span>}
-              {year && <span>{year}</span>}
-              <span>•</span>
-              <span className="capitalize">{type}</span>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleEpisodeClick}
-                className="flex items-center gap-2 bg-zax-primary text-white px-4 py-2 rounded-lg hover:bg-zax-primary/90 transition-colors"
-              >
-                <FaPlay />
-                <span>Assistir</span>
-              </button>
-              <button
-                onClick={handleToggleFavorite}
-                className="flex items-center justify-center w-10 h-10 bg-zax-button text-white rounded-lg hover:bg-zax-primary transition-colors"
-              >
-                {isFavorite ? <MdFavorite /> : <MdFavoriteBorder />}
-              </button>
+        <div className="relative aspect-video">
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="absolute bottom-0 p-4 w-full">
+              <h3 className="text-white font-medium mb-1">
+                {title} {type === "episode" && `- Episódio ${episodeNumber}`}
+              </h3>
+              <div className="flex items-center gap-2 text-sm text-zax-text">
+                {rating && <span>{rating}</span>}
+                {year && <span>•</span>}
+                {year && <span>{year}</span>}
+                <span>•</span>
+                <span className="capitalize">{type}</span>
+              </div>
             </div>
           </div>
         </div>
       </Link>
+      <button
+        onClick={handleToggleFavorite}
+        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-zax-primary"
+      >
+        {isFavorite ? <MdFavorite /> : <MdFavoriteBorder />}
+      </button>
     </div>
   );
-}
+};

@@ -10,7 +10,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>
-        <Route element={<NetflixLayout />}>
+        <Route path="/" element={<NetflixLayout />}>
           <Route index element={<Home />} />
           <Route path="watch/*" element={<Watch />} />
           <Route path="*" element={<Home />} />
