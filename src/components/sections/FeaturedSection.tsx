@@ -1,49 +1,37 @@
 import { MediaCard } from "../cards/MediaCard";
 import { useQuery } from "@tanstack/react-query";
-import { animeApi } from "../../services/api";
+
+interface FeaturedAnime {
+  id: number;
+  title: string;
+  image: string;
+  rating: string;
+  year: number;
+}
 
 export function FeaturedSection() {
-  const {
-    data: trending,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["trending"],
-    queryFn: () => animeApi.getTrending(),
+  const { data: featuredAnimes } = useQuery<FeaturedAnime[]>({
+    queryKey: ["featuredAnimes"],
+    queryFn: () => Promise.resolve([]),
   });
 
-  if (isLoading) {
-    return (
-      <section className="px-8 py-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Em Destaque</h2>
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-zax-primary border-t-transparent"></div>
-        </div>
-      </section>
-    );
-  }
-
-  if (isError) {
+  if (!featuredAnimes?.length) {
     return null;
   }
 
   return (
     <section className="px-8 py-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Em Destaque</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">Destaques</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {trending?.results.slice(0, 4).map((anime) => (
+        {featuredAnimes.map((anime) => (
           <MediaCard
             key={anime.id}
-            id={Number(anime.id)}
+            id={anime.id}
             title={anime.title}
             imageUrl={anime.image}
             type="series"
-            rating="All"
-            year={
-              anime.releaseDate
-                ? parseInt(anime.releaseDate)
-                : new Date().getFullYear()
-            }
+            rating={anime.rating}
+            year={anime.year}
           />
         ))}
       </div>

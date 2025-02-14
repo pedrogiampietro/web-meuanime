@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
 import { VideoPlayer } from "../components/player/VideoPlayer";
-import { animeApi } from "../services/api";
+
 import { Link } from "react-router-dom";
 import type { Watch } from "../types/consumet";
 
@@ -19,7 +19,8 @@ export function WatchAnime() {
 
       try {
         setIsLoading(true);
-        const data = await animeApi.getEpisodeSources(episodeId);
+        // const data = await animeApi.getEpisodeSources(episodeId);
+        const data = {} as any;
         setVideoSources(data);
       } catch (error) {
         console.error("Error fetching episode:", error);

@@ -1,20 +1,87 @@
 import { FeaturedSection } from "../components/sections/FeaturedSection";
 import { HeroSlider } from "../components/hero/HeroSlider";
-import { animeApi } from "../services/api";
+import { api } from "../services/api";
 import { MediaCard } from "../components/cards/MediaCard";
 import { useQuery } from "@tanstack/react-query";
-import { Recent } from "../types/consumet";
+import type { AnimeEpisode } from "../services/api";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+interface FormattedEpisode {
+  id: number;
+  episodeId: string;
+  title: string;
+  imageUrl: string;
+  type: "episode";
+  year: number;
+  rating: string;
+  episodeNumber: string;
+  href: string;
+  episodeData: AnimeEpisode;
+}
+
+interface LastWatchedEpisode extends AnimeEpisode {
+  link: string;
+}
 
 export function Home() {
   const {
     data: recentEpisodes,
     isLoading,
     isError,
+    error,
     refetch,
   } = useQuery({
     queryKey: ["recentEpisodes"],
-    queryFn: () => animeApi.getRecentEpisodes(),
+    queryFn: async () => {
+      try {
+        const data = await api.getLatestEpisodes();
+        return data;
+      } catch (err) {
+        console.error("Error fetching episodes:", err);
+        throw err;
+      }
+    },
   });
+
+  const formatEpisodeData = (episode: AnimeEpisode): FormattedEpisode => {
+    const match = episode.title.match(/(.*?)(?:\s*Episodio\s*(\d+))?$/i);
+    const baseTitle = match ? match[1].trim() : episode.title;
+    const episodeNumber = episode.episode || match?.[2] || "1";
+
+    // Limpar e formatar o link corretamente
+    const cleanLink = episode.link
+      .replace(/^https?:\/\/[^/]+\//, "") // Remove o domínio
+      .replace(/^episodio\//, "") // Remove o prefixo 'episodio/'
+      .replace(/\/$/, ""); // Remove a barra final se existir
+
+    const href = `/watch/${cleanLink}`;
+
+    return {
+      id: Date.now(),
+      title: baseTitle,
+      imageUrl: episode.image,
+      type: "episode",
+      year: new Date().getFullYear(),
+      rating: "0",
+      episodeNumber,
+      href,
+      episodeData: {
+        ...episode,
+        title: baseTitle,
+        link: cleanLink, // Link limpo sem o prefixo 'episodio/'
+      },
+    };
+  };
+
+  const navigate = useNavigate();
+
+  const handleLastWatchedClick = (episode: AnimeEpisode) => {
+    setCurrentEpisode(episode);
+    setTimeout(() => {
+      navigate(`/watch/${episode.link}`);
+    }, 0);
+  };
 
   return (
     <div className="relative">
@@ -43,18 +110,16 @@ export function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {recentEpisodes?.results.map((episode: Recent) => (
-              <MediaCard
-                key={episode.id}
-                id={Number(episode.id)}
-                episodeId={episode.episodeId}
-                title={`${episode.title} - Episódio ${episode.episodeNumber}`}
-                imageUrl={episode.image}
-                type="episode"
-                year={new Date().getFullYear()}
-                rating="0"
-              />
-            ))}
+            {recentEpisodes?.map((episode) => {
+              const formattedData = formatEpisodeData(episode);
+              return (
+                <MediaCard
+                  key={`${episode.title}-${episode.episode}`}
+                  {...formattedData}
+                  onClick={() => handleLastWatchedClick(episode)}
+                />
+              );
+            })}
           </div>
         )}
       </section>

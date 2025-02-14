@@ -6,7 +6,6 @@ import {
   addToFavorites,
   removeFromFavorites,
 } from "../store/features/favorites/favoritesSlice";
-import { animeApi } from "../services/api";
 
 interface AnimeDetailsState {
   id: string;
@@ -46,7 +45,8 @@ export const AnimeDetails: React.FC = () => {
 
       try {
         setIsLoading(true);
-        const details = await animeApi.getAnimeDetails(id);
+        const details = {} as any;
+        // const details = await animeApi.getAnimeDetails(id);
         // Transform the API response to match AnimeDetailsState
         setAnimeData({
           id: details.id,

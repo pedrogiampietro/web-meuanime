@@ -5,7 +5,7 @@ import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { useQuery } from "@tanstack/react-query";
-import { animeApi } from "../../services/api";
+
 import {
   addToFavorites,
   removeFromFavorites,
@@ -19,7 +19,7 @@ export function HeroSlider() {
 
   const { data: trending, isLoading } = useQuery({
     queryKey: ["trending"],
-    queryFn: () => animeApi.getTrending(),
+    queryFn: () => "",
   });
 
   // Auto-play

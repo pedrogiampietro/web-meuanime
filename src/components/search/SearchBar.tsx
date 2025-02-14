@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FiSearch, FiX } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
-import { animeApi } from "../../services/api";
 import type { IAnimeResult } from "@consumet/extensions";
 
 export function SearchBar() {
@@ -18,7 +17,8 @@ export function SearchBar() {
       }
 
       try {
-        const results = await animeApi.searchAnime(searchTerm);
+        // const results = await animeApi.searchAnime(searchTerm);
+        const results = [] as any;
         setResults(results.results || []);
       } catch (error) {
         console.error("Erro na busca:", error);
