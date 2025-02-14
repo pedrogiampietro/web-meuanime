@@ -10,7 +10,7 @@ export function Watch() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pt-24">
       <div className="bg-zax-card rounded-lg p-6">
         <h1 className="text-2xl font-bold text-white mb-4">
           {currentEpisode.title}

@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import type { AnimeEpisode } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
-import { useState } from "react";
 
 interface FormattedEpisode {
   id: number;
@@ -55,6 +54,7 @@ export function Home() {
 
     return {
       id: Date.now(),
+      episodeId: episode.episode || "1",
       title: baseTitle,
       imageUrl: episode.image,
       type: "episode",
@@ -71,6 +71,7 @@ export function Home() {
   };
 
   const navigate = useNavigate();
+  const setCurrentEpisode = useEpisodeStore((state) => state.setCurrentEpisode);
 
   const handleLastWatchedClick = (episode: AnimeEpisode) => {
     setCurrentEpisode(episode);
