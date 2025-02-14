@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
+import { VideoPlayer } from "../components/player/VideoPlayer";
 
 export function Watch() {
   const currentEpisode = useEpisodeStore((state) => state.currentEpisode);
@@ -19,12 +20,9 @@ export function Watch() {
 
         <div className="aspect-video bg-black rounded-lg mb-4">
           {currentEpisode.playerUrl && (
-            <iframe
-              src={currentEpisode.playerUrl}
-              className="w-full h-full"
+            <VideoPlayer
+              url={currentEpisode.playerUrl}
               title={currentEpisode.title}
-              allowFullScreen
-              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
             />
           )}
         </div>
