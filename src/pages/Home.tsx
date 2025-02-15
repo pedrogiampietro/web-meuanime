@@ -3,7 +3,11 @@ import { HeroSlider } from "../components/hero/HeroSlider";
 import { api } from "../services/api";
 import { MediaCard } from "../components/cards/MediaCard";
 import { useQuery } from "@tanstack/react-query";
-import type { AnimeEpisode } from "../services/api";
+import type {
+  AnimeEpisode,
+  AnimeProvider,
+  ProviderResult,
+} from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
 import { useState, useEffect } from "react";
@@ -26,17 +30,30 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [providerResults, setProviderResults] = useState<
     ProviderResult<AnimeEpisode[]>[]
-  >([]);
+  >([
+    {
+      data: null,
+      provider: "animesonlinecc",
+      success: false,
+      loading: false,
+      error: undefined,
+    },
+    {
+      data: null,
+      provider: "goyabu",
+      success: false,
+      loading: true,
+      error: undefined,
+    },
+  ]);
   const [episodes, setEpisodes] = useState<AnimeEpisode[]>([]);
 
   useEffect(() => {
     async function loadEpisodes() {
-      setIsLoading(true);
       try {
-        const results = await api.getLatestEpisodes();
+        const results = await api.getLatestEpisodes("goyabu");
         setProviderResults(results);
 
-        // Usa os dados do primeiro provider que teve sucesso
         const successfulProvider = results.find(
           (r) => r.success && r.data?.length
         );
@@ -107,7 +124,13 @@ export function Home() {
           </h2>
 
           {isLoading ? (
-            <ProviderStatus results={providerResults} isLoading={isLoading} />
+            <div className="min-h-[300px] flex items-center justify-center">
+              <ProviderStatus
+                results={providerResults}
+                isLoading={isLoading}
+                centered={true}
+              />
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {episodes.map((episode) => {
@@ -123,11 +146,6 @@ export function Home() {
             </div>
           )}
         </section>
-
-        {/* Status dos providers quando não está carregando */}
-        {!isLoading && (
-          <ProviderStatus results={providerResults} isLoading={isLoading} />
-        )}
       </div>
     </div>
   );
