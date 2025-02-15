@@ -8,15 +8,18 @@ export interface AnimeEpisode {
 
 export interface AnimeDetails {
   title: string;
+  image: string;
   synopsis: string;
-  cover: string;
-  imageUrl: string;
-  status: string;
+  year: string;
   type: string;
+  status?: string;
   genres: string[];
-  episodes: AnimeEpisode[];
-  url: string;
-  year: number;
+  episodes: {
+    number: string;
+    title: string;
+    link: string;
+    playerUrl: string;
+  }[];
 }
 
 export interface SearchResult {

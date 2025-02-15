@@ -35,7 +35,9 @@ export function SearchBar() {
   };
 
   const handleSelectAnime = (slug: string) => {
+    console.log("Clicou no anime:", slug);
     navigate(`/anime/${slug}`);
+    console.log("Navegando para:", `/anime/${slug}`);
     setQuery("");
     setResults([]);
   };

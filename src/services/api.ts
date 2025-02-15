@@ -1,6 +1,6 @@
 import axios from "axios";
 import { getFromCache, saveToCache } from "./cacheService";
-import { SearchResponse } from "../types/anime";
+import { SearchResponse, AnimeDetailsType } from "../types/anime";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:3000/api",
@@ -149,6 +149,41 @@ export const api = {
     } catch (error) {
       console.error("Erro na busca:", error);
       throw new Error("Falha ao buscar animes");
+    }
+  },
+
+  getAnimeDetails: async (slug: string): Promise<AnimeDetailsType> => {
+    console.log("API - Iniciando busca de detalhes para slug:", slug);
+    const cacheKey = `animeDetails_${slug}`;
+    const cachedData = getFromCache<AnimeDetailsType>(cacheKey);
+
+    if (cachedData) {
+      console.log("API - Retornando dados do cache para:", slug);
+      return cachedData;
+    }
+
+    try {
+      const url = `/anime/goyabu/details/${encodeURIComponent(slug)}`;
+      console.log("API - URL da requisição:", url);
+
+      const response = await axiosInstance.get<AnimeDetailsType>(url);
+      console.log("API - Status da resposta:", response.status);
+      console.log("API - Dados recebidos:", response.data);
+
+      if (!response.data) {
+        console.log("API - Nenhum dado recebido");
+        throw new Error("Dados do anime não encontrados");
+      }
+
+      saveToCache(cacheKey, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("API - Erro completo:", error);
+      console.error("API - URL que falhou:", error.config?.url);
+      console.error("API - Resposta de erro:", error.response?.data);
+      throw new Error(
+        error.response?.data?.message || "Falha ao carregar detalhes do anime"
+      );
     }
   },
 };

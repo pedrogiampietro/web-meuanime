@@ -5,6 +5,7 @@ import { Movies } from "../pages/Movies";
 import { Favorites } from "../pages/Favorites";
 import { AnimeDetails } from "../pages/AnimeDetails";
 import { App } from "../App";
+import { Watch } from "../pages/Watch";
 
 function ErrorBoundary() {
   return (
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
       {
         path: "/favoritos",
         element: <Favorites />,
+      },
+      {
+        path: "/watch/:episodeId",
+        element: <Watch />,
       },
     ],
   },
