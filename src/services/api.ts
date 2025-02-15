@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getFromCache, saveToCache } from "./cacheService"; // Supondo que você tenha um serviço de cache
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:3000/api",
@@ -59,14 +60,33 @@ export const api = {
   getLatestEpisodes: async (
     preferredProvider: AnimeProvider = "goyabu"
   ): Promise<ProviderResult<AnimeEpisode[]>[]> => {
+    const cacheKey = `latestEpisodes_${preferredProvider}`;
+
+    // Aumentamos o tempo de expiração para 30 minutos
+    const cachedData = getFromCache<AnimeEpisode[]>(cacheKey, 30);
+    console.log("Cache Key:", cacheKey);
+    console.log("Cached Data:", cachedData);
+
+    if (cachedData) {
+      console.log("Returning cached data");
+      const providers: AnimeProvider[] = ["animesonlinecc", "goyabu"];
+      return providers.map((provider) => ({
+        data: provider === preferredProvider ? cachedData : null,
+        provider,
+        success: provider === preferredProvider,
+        loading: false,
+        error: undefined,
+      }));
+    }
+
+    console.log("No cache found, fetching new data");
     const providers: AnimeProvider[] = ["animesonlinecc", "goyabu"];
-    // Inicializa todos os providers com status inicial
     const results: ProviderResult<AnimeEpisode[]>[] = providers.map(
       (provider) => ({
         data: null,
         provider,
         success: false,
-        loading: provider === preferredProvider, // Apenas o provider preferido começa como loading
+        loading: provider === preferredProvider,
         error: undefined,
       })
     );
@@ -75,29 +95,28 @@ export const api = {
       const response = await axiosInstance.get<AnimeEpisode[]>(
         `/anime/${preferredProvider}/latest`
       );
-      const data = response.data.map((episode) => ({
-        ...episode,
-        provider: preferredProvider,
-      }));
-      setCache(`latestEpisodes_${preferredProvider}`, data);
 
-      // Atualiza apenas o status do provider que foi requisitado
       const providerIndex = results.findIndex(
         (r) => r.provider === preferredProvider
       );
+
       results[providerIndex] = {
-        data,
+        data: response.data,
         provider: preferredProvider,
         success: true,
         loading: false,
+        error: undefined,
       };
+
+      console.log("Saving data to cache");
+      saveToCache(cacheKey, response.data);
 
       return results;
     } catch (error) {
-      // Em caso de erro, atualiza apenas o provider que foi requisitado
       const providerIndex = results.findIndex(
         (r) => r.provider === preferredProvider
       );
+
       results[providerIndex] = {
         data: null,
         provider: preferredProvider,
@@ -105,6 +124,7 @@ export const api = {
         loading: false,
         error: error instanceof Error ? error.message : "Unknown error",
       };
+
       return results;
     }
   },
@@ -136,3 +156,20 @@ export const api = {
 };
 
 export default api;
+
+async function fetchData(url: string) {
+  // Verifica se os dados estão no cache
+  const cachedData = getFromCache(url);
+  if (cachedData) {
+    return cachedData;
+  }
+
+  // Se não estiver no cache, faz a requisição
+  const response = await fetch(url);
+  const data = await response.json();
+
+  // Salva os dados no cache
+  saveToCache(url, data);
+
+  return data;
+}
