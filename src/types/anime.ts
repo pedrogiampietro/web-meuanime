@@ -18,3 +18,16 @@ export interface AnimeDetails {
   url: string;
   year: number;
 }
+
+export interface SearchResult {
+  title: string;
+  link: string;
+  image: string;
+  type: string;
+  slug: string;
+}
+
+export interface SearchResponse {
+  query: string;
+  results: SearchResult[];
+}

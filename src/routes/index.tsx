@@ -4,7 +4,6 @@ import { Series } from "../pages/Series";
 import { Movies } from "../pages/Movies";
 import { Favorites } from "../pages/Favorites";
 import { AnimeDetails } from "../pages/AnimeDetails";
-import { WatchAnime } from "../pages/WatchAnime";
 import { App } from "../App";
 
 function ErrorBoundary() {
@@ -49,12 +48,8 @@ export const router = createBrowserRouter([
         element: <Favorites />,
       },
       {
-        path: "/anime/:id",
+        path: "/anime/:slug",
         element: <AnimeDetails />,
-      },
-      {
-        path: "/watch/:episodeId",
-        element: <WatchAnime />,
       },
     ],
   },

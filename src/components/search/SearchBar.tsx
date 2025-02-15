@@ -1,125 +1,91 @@
-import { useState, useRef, useEffect } from "react";
-import { FiSearch, FiX } from "react-icons/fi";
-import { AnimatePresence, motion } from "framer-motion";
-import type { IAnimeResult } from "@consumet/extensions";
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "../../services/api";
+import { SearchResult } from "../../types/anime";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export function SearchBar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState<IAnimeResult[]>([]);
-  const searchRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const searchAnime = async () => {
-      if (searchTerm.length < 3) {
-        setResults([]);
-        return;
-      }
-
+  const searchAnimes = useCallback(async (searchQuery: string) => {
+    if (searchQuery.length >= 3) {
+      setIsLoading(true);
       try {
-        // const results = await animeApi.searchAnime(searchTerm);
-        const results = [] as any;
-        setResults(results.results || []);
+        const data = await api.searchAnimes(searchQuery);
+        setResults(data.results);
       } catch (error) {
-        console.error("Erro na busca:", error);
+        console.error("Erro ao buscar:", error);
+      } finally {
+        setIsLoading(false);
       }
-    };
-
-    const debounceTimeout = setTimeout(searchAnime, 300);
-    return () => clearTimeout(debounceTimeout);
-  }, [searchTerm]);
-
-  // Fechar ao clicar fora
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
+    } else {
+      setResults([]);
     }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return (
-    <div ref={searchRef} className="relative">
-      {!isOpen ? (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="text-zax-text hover:text-white transition-colors"
-        >
-          <FiSearch className="w-6 h-6" />
-        </button>
-      ) : (
-        <motion.div
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: "300px", opacity: 1 }}
-          exit={{ width: 0, opacity: 0 }}
-          className="flex items-center"
-        >
-          <div className="flex items-center bg-zax-secondary rounded-lg w-full">
-            <FiSearch className="w-5 h-5 text-zax-text ml-3" />
-            <input
-              type="text"
-              autoFocus
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar títulos..."
-              className="bg-transparent text-white px-3 py-2 w-full focus:outline-none"
-            />
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setSearchTerm("");
-              }}
-              className="px-3 text-zax-text hover:text-white"
-            >
-              <FiX className="w-5 h-5" />
-            </button>
-          </div>
+  const debouncedSearch = useDebounce(searchAnimes, 500);
 
-          <AnimatePresence>
-            {results.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-zax-secondary rounded-lg shadow-lg overflow-hidden"
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    debouncedSearch(value);
+  };
+
+  const handleSelectAnime = (slug: string) => {
+    navigate(`/anime/${slug}`);
+    setQuery("");
+    setResults([]);
+  };
+
+  return (
+    <div className="relative w-full max-w-2xl">
+      <div className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={handleSearch}
+          placeholder="Buscar animes..."
+          className="w-full px-4 py-2 bg-zax-bg rounded-lg text-zax-text focus:outline-none focus:ring-2 focus:ring-zax-primary"
+        />
+        {isLoading && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <div className="w-5 h-5 border-2 border-zax-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+
+      {results.length > 0 && (
+        <div className="absolute w-full mt-2 bg-zax-bg/95 backdrop-blur rounded-lg overflow-hidden z-50 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+          <div className="max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-track-zax-bg scrollbar-thumb-purple-500/20 hover:scrollbar-thumb-purple-500/30">
+            {results.map((result) => (
+              <div
+                key={result.slug}
+                onClick={() => handleSelectAnime(result.slug)}
+                className="p-4 hover:bg-purple-500/5 cursor-pointer flex items-center gap-4 transition-all duration-200 border-b border-purple-500/10 last:border-none group"
               >
-                {results.map((result) => (
-                  <div
-                    key={result.id}
-                    className="flex items-center gap-3 p-3 hover:bg-zax-button cursor-pointer transition-colors"
-                  >
-                    <img
-                      src={result.image}
-                      alt={
-                        typeof result.title === "string"
-                          ? result.title
-                          : result.title.userPreferred || ""
-                      }
-                      className="w-20 h-12 object-cover rounded"
-                    />
-                    <div>
-                      <h4 className="text-white font-medium">
-                        {typeof result.title === "string"
-                          ? result.title
-                          : result.title.userPreferred || ""}
-                      </h4>
-                      <p className="text-sm text-zax-text">
-                        {result.type || "Unknown"} •{" "}
-                        {result.releaseDate || "Unknown"}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                <div className="w-14 h-20 flex-shrink-0 overflow-hidden rounded-md shadow-md group-hover:shadow-purple-500/20 transition-all">
+                  <img
+                    src={result.image}
+                    alt={result.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-zax-text font-medium line-clamp-1 group-hover:text-purple-400 transition-colors">
+                    {result.title}
+                  </h3>
+                  <span className="text-zax-text/60 text-sm mt-1 inline-block bg-purple-500/5 px-2 py-0.5 rounded-full">
+                    {result.type}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

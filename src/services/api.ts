@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getFromCache, saveToCache } from "./cacheService";
+import { SearchResponse } from "../types/anime";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:3000/api",
@@ -107,6 +108,7 @@ export const api = {
       console.error("Error in getEpisode:", error);
       throw error;
     }
+    Fic;
   },
 
   getEpisodeById: async (id: string): Promise<AnimeEpisode> => {
@@ -144,6 +146,19 @@ export const api = {
     } catch (error) {
       console.error(`Error searching anime on ${provider}:`, error);
       return null;
+    }
+  },
+
+  searchAnimes: async (query: string): Promise<SearchResponse> => {
+    try {
+      const response = await axiosInstance.get<SearchResponse>(
+        `/anime/goyabu/search?q=${encodeURIComponent(query)}`
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Erro na busca:", error);
+      throw new Error("Falha ao buscar animes");
     }
   },
 };
