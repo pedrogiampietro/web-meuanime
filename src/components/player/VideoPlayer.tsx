@@ -43,7 +43,8 @@ export function VideoPlayer({ url, title }: VideoPlayerProps) {
             },
             hlsOptions: {
               xhrSetup: function (xhr: XMLHttpRequest) {
-                xhr.withCredentials = true;
+                // Remova esta linha que força credentials
+                // xhr.withCredentials = true;
               },
             },
           },

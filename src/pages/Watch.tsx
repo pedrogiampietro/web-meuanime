@@ -19,12 +19,20 @@ export function Watch() {
         </h1>
 
         <div className="aspect-video bg-black rounded-lg mb-4">
-          {currentEpisode.playerUrl && (
-            <VideoPlayer
-              url={currentEpisode.playerUrl}
-              title={currentEpisode.title}
-            />
-          )}
+          {currentEpisode.playerUrl &&
+            (currentEpisode.playerUrl.includes("http") ? (
+              <iframe
+                src={currentEpisode.playerUrl}
+                className="w-full h-full"
+                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              />
+            ) : (
+              <VideoPlayer
+                url={currentEpisode.playerUrl}
+                title={currentEpisode.title}
+              />
+            ))}
         </div>
 
         <div className="text-zax-text mt-4">

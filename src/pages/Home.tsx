@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { AnimeEpisode } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
+import { useState, useEffect } from "react";
+import { ProviderStatus } from "../components/ProviderStatus";
 
 interface FormattedEpisode {
   id: number;
@@ -21,23 +23,35 @@ interface FormattedEpisode {
 }
 
 export function Home() {
-  const {
-    data: recentEpisodes,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["recentEpisodes"],
-    queryFn: async () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [providerResults, setProviderResults] = useState<
+    ProviderResult<AnimeEpisode[]>[]
+  >([]);
+  const [episodes, setEpisodes] = useState<AnimeEpisode[]>([]);
+
+  useEffect(() => {
+    async function loadEpisodes() {
+      setIsLoading(true);
       try {
-        const data = await api.getLatestEpisodes();
-        return data;
-      } catch (err) {
-        console.error("Error fetching episodes:", err);
-        throw err;
+        const results = await api.getLatestEpisodes();
+        setProviderResults(results);
+
+        // Usa os dados do primeiro provider que teve sucesso
+        const successfulProvider = results.find(
+          (r) => r.success && r.data?.length
+        );
+        if (successfulProvider?.data) {
+          setEpisodes(successfulProvider.data);
+        }
+      } catch (error) {
+        console.error("Failed to load episodes:", error);
+      } finally {
+        setIsLoading(false);
       }
-    },
-  });
+    }
+
+    loadEpisodes();
+  }, []);
 
   const formatEpisodeData = (episode: AnimeEpisode): FormattedEpisode => {
     const match = episode.title.match(/(.*?)(?:\s*Episodio\s*(\d+))?$/i);
@@ -93,22 +107,10 @@ export function Home() {
           </h2>
 
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-zax-primary border-t-transparent"></div>
-            </div>
-          ) : isError ? (
-            <div className="text-center text-zax-text py-12">
-              <p>Erro ao carregar episódios recentes</p>
-              <button
-                onClick={() => refetch()}
-                className="mt-4 text-white hover:text-zax-primary transition-colors"
-              >
-                Tentar novamente
-              </button>
-            </div>
+            <ProviderStatus results={providerResults} isLoading={isLoading} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {recentEpisodes?.map((episode) => {
+              {episodes.map((episode) => {
                 const formattedData = formatEpisodeData(episode);
                 return (
                   <MediaCard
@@ -121,6 +123,11 @@ export function Home() {
             </div>
           )}
         </section>
+
+        {/* Status dos providers quando não está carregando */}
+        {!isLoading && (
+          <ProviderStatus results={providerResults} isLoading={isLoading} />
+        )}
       </div>
     </div>
   );

@@ -16,14 +16,114 @@ export interface AnimeEpisode {
   provider: AnimeProvider;
 }
 
+// Interface para o objeto de cache
+interface CacheItem<T> {
+  data: T;
+  timestamp: number;
+}
+
+// Função auxiliar para gerenciar o cache
+function getFromCache<T>(key: string, expirationMinutes: number = 5): T | null {
+  const cached = localStorage.getItem(key);
+  if (!cached) return null;
+
+  const item: CacheItem<T> = JSON.parse(cached);
+  const now = new Date().getTime();
+  const expirationTime = expirationMinutes * 60 * 1000;
+
+  if (now - item.timestamp > expirationTime) {
+    localStorage.removeItem(key);
+    return null;
+  }
+
+  return item.data;
+}
+
+function setCache<T>(key: string, data: T): void {
+  const item: CacheItem<T> = {
+    data,
+    timestamp: new Date().getTime(),
+  };
+  localStorage.setItem(key, JSON.stringify(item));
+}
+
+interface ProviderResult<T> {
+  data: T | null;
+  provider: AnimeProvider;
+  success: boolean;
+  error?: string;
+  loading?: boolean;
+}
+
 export const api = {
   getLatestEpisodes: async (
-    provider: AnimeProvider = "animesonlinecc"
-  ): Promise<AnimeEpisode[]> => {
-    const response = await axiosInstance.get<AnimeEpisode[]>(
-      `/anime/${provider}/latest`
+    preferredProvider: AnimeProvider = "goyabu"
+  ): Promise<ProviderResult<AnimeEpisode[]>[]> => {
+    const providers: AnimeProvider[] = ["animesonlinecc", "goyabu"];
+    // Inicializa todos os providers com status inicial
+    const results: ProviderResult<AnimeEpisode[]>[] = providers.map(
+      (provider) => ({
+        data: null,
+        provider,
+        success: false,
+        loading: false,
+        error: undefined,
+      })
     );
-    return response.data.map((episode) => ({ ...episode, provider }));
+
+    // Coloca o provider preferido primeiro na lista
+    providers.sort((a, b) =>
+      a === preferredProvider ? -1 : b === preferredProvider ? 1 : 0
+    );
+
+    for (const provider of providers) {
+      const providerIndex = results.findIndex((r) => r.provider === provider);
+      const cacheKey = `latestEpisodes_${provider}`;
+      const cachedData = getFromCache<AnimeEpisode[]>(cacheKey);
+
+      // Marca o provider atual como loading
+      results[providerIndex] = {
+        ...results[providerIndex],
+        loading: true,
+      };
+
+      if (cachedData) {
+        results[providerIndex] = {
+          data: cachedData,
+          provider,
+          success: true,
+          loading: false,
+        };
+        return results;
+      }
+
+      try {
+        const response = await axiosInstance.get<AnimeEpisode[]>(
+          `/anime/${provider}/latest`
+        );
+        const data = response.data.map((episode) => ({ ...episode, provider }));
+        setCache(cacheKey, data);
+
+        results[providerIndex] = {
+          data,
+          provider,
+          success: true,
+          loading: false,
+        };
+        return results;
+      } catch (error) {
+        results[providerIndex] = {
+          data: null,
+          provider,
+          success: false,
+          loading: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+        // Continua para o próximo provider
+      }
+    }
+
+    return results;
   },
 
   getEpisode: async (anime: string, episode: string) => {
@@ -36,6 +136,19 @@ export const api = {
       console.error("Error in getEpisode:", error);
       throw error;
     }
+  },
+
+  getEpisodeById: async (id: string) => {
+    const cacheKey = `episode_${id}`;
+    const cachedData = getFromCache<AnimeEpisode>(cacheKey);
+
+    if (cachedData) {
+      return cachedData;
+    }
+
+    const response = await api.get<AnimeEpisode>(`/episodes/${id}`);
+    setCache(cacheKey, response.data);
+    return response.data;
   },
 };
 
