@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { AnimeProvider, AnimeEpisode } from "../services/api";
-import { CircleNotch, CheckCircle } from "phosphor-react";
+import { AnimeProvider, AnimeEpisode, api } from "../services/api";
+import { CircleNotch, CheckCircle, XCircle } from "phosphor-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ProviderStatusProps {
@@ -15,35 +15,79 @@ interface ProviderStatusProps {
   centered: boolean;
 }
 
-export function ProviderStatus({
-  results,
-  isLoading,
-  centered,
-}: ProviderStatusProps) {
-  const [show, setShow] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
+type ProviderState = {
+  name: string;
+  status: "waiting" | "loading" | "success" | "error";
+};
 
-  // Encontra o provider ativo
-  const activeProvider = results.find((r) => r.loading || r.success);
+export function ProviderStatus({ centered }: ProviderStatusProps) {
+  const [providers, setProviders] = useState<ProviderState[]>([
+    { name: "Goyabu", status: "waiting" },
+    { name: "AnimesOnlineCC", status: "waiting" },
+  ]);
 
   useEffect(() => {
-    // Remova o timer e a lógica de fechamento do modal
-    if (activeProvider?.success && !showSuccess) {
-      console.log("Provider succeeded, showing success state");
-      setShowSuccess(true); // Atualiza o estado para mostrar o ícone de sucesso
-    }
-  }, [activeProvider?.success, showSuccess]); // Dependências do useEffect
+    const checkProviders = async () => {
+      setProviders((prev) =>
+        prev.map((p) => (p.name === "Goyabu" ? { ...p, status: "loading" } : p))
+      );
 
-  // Se não houver provider ativo ou o modal não deve ser mostrado, retorna null
-  if (!show || !activeProvider) return null;
+      try {
+        const goyabuResults = await api.searchAnime("latest", "goyabu");
+
+        if (goyabuResults && goyabuResults.length > 0) {
+          setProviders((prev) =>
+            prev.map((p) =>
+              p.name === "Goyabu" ? { ...p, status: "success" } : p
+            )
+          );
+          return;
+        }
+
+        setProviders((prev) =>
+          prev.map((p) => (p.name === "Goyabu" ? { ...p, status: "error" } : p))
+        );
+
+        setProviders((prev) =>
+          prev.map((p) =>
+            p.name === "AnimesOnlineCC" ? { ...p, status: "loading" } : p
+          )
+        );
+
+        const animesonlineccResults = await api.searchAnime(
+          "latest",
+          "animesonlinecc"
+        );
+
+        if (animesonlineccResults && animesonlineccResults.length > 0) {
+          setProviders((prev) =>
+            prev.map((p) =>
+              p.name === "AnimesOnlineCC" ? { ...p, status: "success" } : p
+            )
+          );
+          return;
+        }
+
+        setProviders((prev) =>
+          prev.map((p) =>
+            p.name === "AnimesOnlineCC" ? { ...p, status: "error" } : p
+          )
+        );
+      } catch (error) {
+        setProviders((prev) =>
+          prev.map((p) =>
+            p.status === "loading" ? { ...p, status: "error" } : p
+          )
+        );
+      }
+    };
+
+    checkProviders();
+  }, []);
 
   const containerClasses = centered
     ? "fixed inset-0 flex items-center justify-center z-50"
     : "fixed bottom-4 right-4 z-50";
-
-  const statusContainerClasses = centered
-    ? "bg-zinc-900/90 p-8 rounded-lg shadow-lg max-w-md w-full backdrop-blur-sm"
-    : "bg-zinc-900 p-4 rounded-lg shadow-lg";
 
   return (
     <AnimatePresence>
@@ -53,82 +97,56 @@ export function ProviderStatus({
         exit={{ opacity: 0 }}
         className={containerClasses}
       >
-        <div className={statusContainerClasses}>
-          <div className="space-y-3">
+        <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg backdrop-blur-sm space-y-3">
+          {providers.map((provider) => (
             <motion.div
-              key={activeProvider.provider}
-              initial={{ opacity: 0.5, y: 10 }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: activeProvider.loading ? 1.02 : 1,
-              }}
-              transition={{ duration: 0.3 }}
+              key={provider.name}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               className={`
                 flex items-center justify-between gap-4 p-3 rounded
-                transition-colors duration-300 ease-in-out
                 ${
-                  !showSuccess
-                    ? "bg-blue-500/10 border border-blue-500/20 shadow-lg shadow-blue-500/10"
-                    : "bg-green-500/10 border border-green-500/20 shadow-lg shadow-green-500/10"
+                  provider.status === "loading"
+                    ? "bg-blue-500/10 border border-blue-500/20"
+                    : ""
+                }
+                ${
+                  provider.status === "success"
+                    ? "bg-green-500/10 border border-green-500/20"
+                    : ""
+                }
+                ${
+                  provider.status === "error"
+                    ? "bg-red-500/10 border border-red-500/20"
+                    : ""
+                }
+                ${
+                  provider.status === "waiting"
+                    ? "bg-zinc-800/50 border border-zinc-700/20"
+                    : ""
                 }
               `}
             >
-              <div className="flex flex-col">
-                <span className="text-sm text-zinc-300 capitalize flex items-center gap-2">
-                  {activeProvider.provider}
-                  {!showSuccess && (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-xs text-blue-400 font-medium"
-                    >
-                      tentando...
-                    </motion.span>
-                  )}
-                </span>
-                {activeProvider.error && (
-                  <motion.span
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-xs text-red-400 mt-1"
-                  >
-                    {activeProvider.error}
-                  </motion.span>
+              <span className="text-sm text-zinc-300">{provider.name}</span>
+              <div className="flex items-center gap-2">
+                {provider.status === "loading" && (
+                  <CircleNotch
+                    weight="bold"
+                    className="w-5 h-5 text-blue-500 animate-spin"
+                  />
+                )}
+                {provider.status === "success" && (
+                  <CheckCircle
+                    weight="bold"
+                    className="w-5 h-5 text-green-500"
+                  />
+                )}
+                {provider.status === "error" && (
+                  <XCircle weight="bold" className="w-5 h-5 text-red-500" />
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <AnimatePresence mode="wait">
-                  {!showSuccess ? (
-                    <motion.div
-                      key="loading"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                    >
-                      <CircleNotch
-                        weight="bold"
-                        className="w-5 h-5 text-blue-500 animate-spin"
-                      />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="success"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                    >
-                      <CheckCircle
-                        weight="bold"
-                        className="w-5 h-5 text-green-500"
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
             </motion.div>
-          </div>
+          ))}
         </div>
       </motion.div>
     </AnimatePresence>

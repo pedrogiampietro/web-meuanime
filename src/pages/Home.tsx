@@ -2,12 +2,8 @@ import { FeaturedSection } from "../components/sections/FeaturedSection";
 import { HeroSlider } from "../components/hero/HeroSlider";
 import { api } from "../services/api";
 import { MediaCard } from "../components/cards/MediaCard";
-import { useQuery } from "@tanstack/react-query";
-import type {
-  AnimeEpisode,
-  AnimeProvider,
-  ProviderResult,
-} from "../services/api";
+
+import type { AnimeEpisode, ProviderResult } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
 import { useState, useEffect } from "react";
@@ -100,7 +96,7 @@ export function Home() {
       episodeData: {
         ...episode,
         title: baseTitle,
-        link: cleanLink, // Link limpo sem o prefixo 'episodio/'
+        link: cleanLink,
       },
     };
   };
