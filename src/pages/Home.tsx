@@ -47,12 +47,9 @@ export function Home() {
   useEffect(() => {
     async function loadEpisodes() {
       try {
-        console.log("Starting fetch for episodes");
         const results = await api.getLatestEpisodes("goyabu");
-        console.log("Fetch results:", results);
 
         setProviderResults(results);
-        console.log("Updated provider results");
 
         const successfulProvider = results.find(
           (r) => r.success && r.data?.length

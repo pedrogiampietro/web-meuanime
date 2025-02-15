@@ -36,6 +36,10 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
+        path: "/anime/:slug",
+        element: <AnimeDetails />,
+      },
+      {
         path: "/series",
         element: <Series />,
       },
@@ -46,10 +50,6 @@ export const router = createBrowserRouter([
       {
         path: "/favoritos",
         element: <Favorites />,
-      },
-      {
-        path: "/anime/:slug",
-        element: <AnimeDetails />,
       },
     ],
   },

@@ -45,10 +45,6 @@ export const api = {
       const cacheKey = `latestEpisodes_${provider}`;
       const cachedData = getFromCache<AnimeEpisode[]>(cacheKey, 30);
 
-      console.log(`Trying provider: ${provider}`);
-      console.log("Cache Key:", cacheKey);
-      console.log("Cached Data:", cachedData);
-
       if (cachedData && cachedData.length > 0) {
         console.log(`Returning cached data from ${provider}`);
         return cachedData;
@@ -61,7 +57,6 @@ export const api = {
         );
 
         if (response.data && response.data.length > 0) {
-          console.log(`Saving data from ${provider} to cache`);
           saveToCache(cacheKey, response.data);
           return response.data;
         }
@@ -100,15 +95,13 @@ export const api = {
 
   getEpisode: async (anime: string, episode: string) => {
     try {
-      console.log("Fetching episode:", { anime, episode });
       const response = await axiosInstance.get(`/episodes/${anime}/${episode}`);
-      console.log("Episode response:", response.data);
+
       return response.data;
     } catch (error) {
       console.error("Error in getEpisode:", error);
       throw error;
     }
-    Fic;
   },
 
   getEpisodeById: async (id: string): Promise<AnimeEpisode> => {
@@ -129,16 +122,13 @@ export const api = {
     const cachedData = getFromCache<AnimeEpisode[]>(cacheKey, 30);
 
     if (cachedData && cachedData.length > 0) {
-      console.log(`Returning cached search results for ${provider}`);
       return cachedData;
     }
 
     try {
-      console.log(`Fetching new search results from ${provider}`);
       const response = await axiosInstance.get(`/anime/${provider}/${query}`);
 
       if (response.data && response.data.length > 0) {
-        console.log(`Saving search results from ${provider} to cache`);
         saveToCache(cacheKey, response.data);
       }
 
