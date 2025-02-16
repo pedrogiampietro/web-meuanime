@@ -43,7 +43,7 @@ export function Sidebar() {
           </Link>
 
           <Link
-            to="/series"
+            to="/animes"
             className="flex items-center gap-3 text-zax-text hover:text-white hover:bg-zax-button rounded-lg p-3 transition-all"
           >
             <BiMoviePlay className="text-xl flex-shrink-0" />
@@ -51,7 +51,7 @@ export function Sidebar() {
               animate={{ opacity: isExpanded ? 1 : 0 }}
               className="whitespace-nowrap"
             >
-              Séries
+              Animes
             </motion.span>
           </Link>
 

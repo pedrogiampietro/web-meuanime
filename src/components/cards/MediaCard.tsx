@@ -14,7 +14,7 @@ interface MediaCardProps {
   id: number;
   title: string;
   imageUrl: string;
-  type: "movie" | "series" | "episode";
+  type: "movie" | "animes" | "episode";
   rating?: number | string;
   year?: number;
   episodeNumber?: string;
@@ -70,7 +70,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           id,
           title,
           imageUrl,
-          type: type === "episode" ? "series" : type,
+          type: type === "episode" ? "animes" : type,
           rating: String(rating || "0"),
           year: year || new Date().getFullYear(),
         })

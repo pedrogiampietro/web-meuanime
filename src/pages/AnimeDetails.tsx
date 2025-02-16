@@ -50,7 +50,7 @@ export function AnimeDetails() {
           id: Number(slug),
           title: anime.title,
           imageUrl: anime.image,
-          type: "series",
+          type: "animes",
           rating: "0",
           year: String(anime.year),
         })

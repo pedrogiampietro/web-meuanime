@@ -1,11 +1,11 @@
 export const ANIME_CONTENT = {
-  series: [
+  animes: [
     {
       id: 1,
       title: "Attack on Titan",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Attack+on+Titan",
-      type: "series",
+      type: "animes",
       rating: "16+",
       year: 2013,
     },
@@ -14,7 +14,7 @@ export const ANIME_CONTENT = {
       title: "Death Note",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Death+Note",
-      type: "series",
+      type: "animes",
       rating: "14+",
       year: 2006,
     },
@@ -23,7 +23,7 @@ export const ANIME_CONTENT = {
       title: "One Piece",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=One+Piece",
-      type: "series",
+      type: "animes",
       rating: "12+",
       year: 1999,
     },
@@ -32,7 +32,7 @@ export const ANIME_CONTENT = {
       title: "Demon Slayer",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Demon+Slayer",
-      type: "series",
+      type: "animes",
       rating: "16+",
       year: 2019,
     },
@@ -41,7 +41,7 @@ export const ANIME_CONTENT = {
       title: "Jujutsu Kaisen",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Jujutsu+Kaisen",
-      type: "series",
+      type: "animes",
       rating: "16+",
       year: 2020,
     },
@@ -50,7 +50,7 @@ export const ANIME_CONTENT = {
       title: "My Hero Academia",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=My+Hero+Academia",
-      type: "series",
+      type: "animes",
       rating: "14+",
       year: 2016,
     },
@@ -59,7 +59,7 @@ export const ANIME_CONTENT = {
       title: "Tokyo Revengers",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Tokyo+Revengers",
-      type: "series",
+      type: "animes",
       rating: "16+",
       year: 2021,
     },
@@ -68,7 +68,7 @@ export const ANIME_CONTENT = {
       title: "Black Clover",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Black+Clover",
-      type: "series",
+      type: "animes",
       rating: "14+",
       year: 2017,
     },
@@ -135,7 +135,7 @@ export const ANIME_CONTENT = {
       title: "Jujutsu Kaisen",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Jujutsu+Kaisen",
-      type: "series",
+      type: "animes",
       rating: "16+",
       year: 2020,
     },
@@ -144,7 +144,7 @@ export const ANIME_CONTENT = {
       title: "Demon Slayer",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Demon+Slayer",
-      type: "series",
+      type: "animes",
       rating: "16+",
       year: 2019,
     },
@@ -153,7 +153,7 @@ export const ANIME_CONTENT = {
       title: "Attack on Titan",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=Attack+on+Titan",
-      type: "series",
+      type: "animes",
       rating: "16+",
       year: 2013,
     },
@@ -162,7 +162,7 @@ export const ANIME_CONTENT = {
       title: "One Piece",
       imageUrl:
         "https://placehold.co/480x270/242a4d/7f84b5/jpeg?text=One+Piece",
-      type: "series",
+      type: "animes",
       rating: "12+",
       year: 1999,
     },
