@@ -9,9 +9,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEpisodeStore } from "../../store/episodeStore";
 import { AnimeEpisode } from "../../services/api";
 import { useState } from "react";
+import { slugify } from "../../utils/slugify";
+import { generateSlug } from "../../utils/stringUtils";
 
 interface MediaCardProps {
-  id: number;
+  id: string;
   title: string;
   imageUrl: string;
   type: "movie" | "animes" | "episode";
@@ -40,7 +42,11 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   const dispatch = useAppDispatch();
   const setCurrentEpisode = useEpisodeStore((state) => state.setCurrentEpisode);
   const favorites = useAppSelector((state) => state.favorites.items);
-  const isFavorite = favorites.some((item) => item.id === id);
+  const generatedId = generateSlug(
+    title,
+    String(year || new Date().getFullYear())
+  );
+  const isFavorite = favorites.some((item) => item.id === generatedId);
 
   const getWatchLink = () => {
     if (href) return href;
@@ -51,7 +57,8 @@ export const MediaCard: React.FC<MediaCardProps> = ({
         .replace(/\/$/, "");
       return `/watch/${cleanLink}`;
     }
-    return `/anime/${id}`;
+    const cleanId = id.replace(/^anime_/, "");
+    return `/anime/${cleanId}`;
   };
 
   const handleEpisodeClick = (e: React.MouseEvent) => {
@@ -62,17 +69,18 @@ export const MediaCard: React.FC<MediaCardProps> = ({
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
+
     if (isFavorite) {
-      dispatch(removeFromFavorites(id));
+      dispatch(removeFromFavorites(generatedId));
     } else {
       dispatch(
         addToFavorites({
-          id,
+          id: generatedId,
           title,
           imageUrl,
           type: type === "episode" ? "animes" : type,
           rating: String(rating || "0"),
-          year: year || new Date().getFullYear(),
+          year: String(year || new Date().getFullYear()),
         })
       );
     }

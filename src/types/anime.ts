@@ -45,3 +45,12 @@ export interface AnimeResponse {
     slug: string;
   }[];
 }
+
+export interface Anime {
+  id: string;
+  number: number;
+  title: string;
+  url: string;
+  thumbnail: string;
+  animeTitle: string;
+}

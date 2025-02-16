@@ -1,29 +1,57 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { MediaContent } from "../../../types/media";
+import {
+  StoredFavorite,
+  storageService,
+} from "../../../services/storageService";
+import { generateSlug } from "../../../utils/stringUtils";
 
 interface FavoritesState {
-  items: MediaContent[];
+  items: StoredFavorite[];
 }
 
 const initialState: FavoritesState = {
-  items: [],
+  items: storageService.getFavorites(),
 };
 
-export const favoritesSlice = createSlice({
+const favoritesSlice = createSlice({
   name: "favorites",
   initialState,
   reducers: {
-    addToFavorites: (state, action: PayloadAction<MediaContent>) => {
-      const exists = state.items.some((item) => item.id === action.payload.id);
+    addToFavorites: (state, action: PayloadAction<StoredFavorite>) => {
+      const currentFavorites = storageService.getFavorites();
+
+      const exists = currentFavorites.some(
+        (item) => String(item.id) === String(action.payload.id)
+      );
+
       if (!exists) {
-        state.items.push(action.payload);
+        const updatedFavorites = [...currentFavorites, action.payload];
+        state.items = updatedFavorites;
+        storageService.saveFavorites(updatedFavorites);
       }
     },
-    removeFromFavorites: (state, action: PayloadAction<number>) => {
-      state.items = state.items.filter((item) => item.id !== action.payload);
+    removeFromFavorites: (state, action: PayloadAction<string>) => {
+      const currentFavorites = storageService.getFavorites();
+
+      const updatedFavorites = currentFavorites.filter(
+        (item) => String(item.id) !== String(action.payload)
+      );
+
+      state.items = updatedFavorites;
+      storageService.saveFavorites(updatedFavorites);
     },
   },
 });
 
 export const { addToFavorites, removeFromFavorites } = favoritesSlice.actions;
 export default favoritesSlice.reducer;
+
+export const addFavorite = (anime: Anime) => {
+  const slug = generateSlug(anime.title, anime.year);
+  return {
+    payload: {
+      ...anime,
+      id: slug,
+    },
+  };
+};

@@ -2,10 +2,15 @@ import { MediaCard } from "../components/cards/MediaCard";
 import { useAnimes } from "../hooks/useAnimes";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { ProviderStatus } from "../components/ProviderStatus";
+import { slugify } from "../utils/slugify";
 
 export function Animes() {
   const { animes, loading, error, page, setPage, providerResults } =
     useAnimes();
+
+  const createUniqueId = (anime: (typeof animes)[0]) => {
+    return slugify(anime.title);
+  };
 
   if (loading) {
     return (
@@ -51,7 +56,7 @@ export function Animes() {
             {animes.map((anime) => (
               <MediaCard
                 key={anime.slug}
-                id={anime.slug}
+                id={createUniqueId(anime)}
                 title={anime.title}
                 imageUrl={anime.image}
                 type="animes"
