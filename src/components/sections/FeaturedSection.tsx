@@ -29,7 +29,7 @@ export function FeaturedSection() {
             id={anime.id}
             title={anime.title}
             imageUrl={anime.image}
-            type="series"
+            type="animes"
             rating={anime.rating}
             year={anime.year}
           />

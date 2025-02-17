@@ -44,7 +44,7 @@ export function HeroSlider() {
     title: anime.title,
     description: anime.genres?.join(", ") || "",
     imageUrl: anime.image,
-    type: "series",
+    type: "animes",
     rating: "All",
     year: anime.releaseDate
       ? parseInt(anime.releaseDate)
@@ -78,7 +78,7 @@ export function HeroSlider() {
               ? currentItem.title
               : currentItem.title.userPreferred || "",
           imageUrl: currentItem.imageUrl || "",
-          type: "series",
+          type: "animes",
           rating: "0",
           year: currentItem.year,
         })

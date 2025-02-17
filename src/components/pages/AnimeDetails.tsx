@@ -24,7 +24,7 @@ const AnimeDetails: React.FC = () => {
           id: Number(id),
           title: animeData.title,
           imageUrl: animeData.image,
-          type: "series",
+          type: "animes",
           rating: "0", // Change to string
           year: animeData.releaseDate
             ? parseInt(animeData.releaseDate)

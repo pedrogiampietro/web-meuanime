@@ -34,3 +34,23 @@ export interface SearchResponse {
   query: string;
   results: SearchResult[];
 }
+
+export interface AnimeResponse {
+  page: number;
+  animes: {
+    title: string;
+    link: string;
+    image: string;
+    type: string;
+    slug: string;
+  }[];
+}
+
+export interface Anime {
+  id: string;
+  number: number;
+  title: string;
+  url: string;
+  thumbnail: string;
+  animeTitle: string;
+}

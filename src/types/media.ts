@@ -2,7 +2,7 @@ export interface MediaContent {
   id: number;
   title: string;
   imageUrl: string;
-  type: "movie" | "series";
+  type: "movie" | "animes";
   rating: string;
   year: number;
 }
@@ -12,7 +12,7 @@ export interface MediaCardProps {
   episodeId?: string;
   title: string;
   imageUrl: string;
-  type: "movie" | "series" | "episode";
+  type: "movie" | "animes" | "episode";
   rating: string;
   year: number;
   episodeNumber?: number;

@@ -17,7 +17,8 @@ export function AnimeDetails() {
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
-  const isFavorite = favorites.some((item) => item.id === Number(slug));
+  const animeId = `anime_${slug}`;
+  const isFavorite = favorites.some((item) => item.id === animeId);
   const navigate = useNavigate();
   const setCurrentEpisode = useEpisodeStore((state) => state.setCurrentEpisode);
 
@@ -43,14 +44,14 @@ export function AnimeDetails() {
     if (!anime || !slug) return;
 
     if (isFavorite) {
-      dispatch(removeFromFavorites(Number(slug)));
+      dispatch(removeFromFavorites(animeId));
     } else {
       dispatch(
         addToFavorites({
-          id: Number(slug),
+          id: animeId,
           title: anime.title,
           imageUrl: anime.image,
-          type: "series",
+          type: "animes",
           rating: "0",
           year: String(anime.year),
         })

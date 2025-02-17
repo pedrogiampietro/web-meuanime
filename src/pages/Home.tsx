@@ -125,7 +125,7 @@ export function Home() {
               <ProviderStatus
                 results={providerResults}
                 isLoading={isLoading}
-                centered={true}
+                centered={false}
               />
             </div>
           ) : (

@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Home } from "../pages/Home";
-import { Series } from "../pages/Series";
+import { Animes } from "../pages/Animes";
 import { Movies } from "../pages/Movies";
 import { Favorites } from "../pages/Favorites";
 import { AnimeDetails } from "../pages/AnimeDetails";
@@ -41,8 +41,8 @@ export const router = createBrowserRouter([
         element: <AnimeDetails />,
       },
       {
-        path: "/series",
-        element: <Series />,
+        path: "/animes",
+        element: <Animes />,
       },
       {
         path: "/filmes",
