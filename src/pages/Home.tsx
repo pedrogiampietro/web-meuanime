@@ -2,11 +2,12 @@ import { FeaturedSection } from "../components/sections/FeaturedSection";
 import { HeroSlider } from "../components/hero/HeroSlider";
 import { api } from "../services/api";
 import { MediaCard } from "../components/cards/MediaCard";
-import { useQuery } from "@tanstack/react-query";
-import type { AnimeEpisode } from "../services/api";
+
+import type { AnimeEpisode, ProviderResult } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ProviderStatus } from "../components/ProviderStatus";
 
 interface FormattedEpisode {
   id: number;
@@ -22,23 +23,49 @@ interface FormattedEpisode {
 }
 
 export function Home() {
-  const {
-    data: recentEpisodes,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["recentEpisodes"],
-    queryFn: async () => {
-      try {
-        const data = await api.getLatestEpisodes();
-        return data;
-      } catch (err) {
-        console.error("Error fetching episodes:", err);
-        throw err;
-      }
+  const [isLoading, setIsLoading] = useState(true);
+  const [providerResults, setProviderResults] = useState<
+    ProviderResult<AnimeEpisode[]>[]
+  >([
+    {
+      data: null,
+      provider: "animesonlinecc",
+      success: false,
+      loading: false,
+      error: undefined,
     },
-  });
+    {
+      data: null,
+      provider: "goyabu",
+      success: false,
+      loading: true,
+      error: undefined,
+    },
+  ]);
+  const [episodes, setEpisodes] = useState<AnimeEpisode[]>([]);
+
+  useEffect(() => {
+    async function loadEpisodes() {
+      try {
+        const results = await api.getLatestEpisodes("goyabu");
+
+        setProviderResults(results);
+
+        const successfulProvider = results.find(
+          (r) => r.success && r.data?.length
+        );
+        if (successfulProvider?.data) {
+          setEpisodes(successfulProvider.data);
+        }
+      } catch (error) {
+        console.error("Failed to load episodes:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadEpisodes();
+  }, []);
 
   const formatEpisodeData = (episode: AnimeEpisode): FormattedEpisode => {
     const match = episode.title.match(/(.*?)(?:\s*Episodio\s*(\d+))?$/i);
@@ -55,6 +82,7 @@ export function Home() {
 
     return {
       id: Date.now(),
+      episodeId: episode.episode || "1",
       title: baseTitle,
       imageUrl: episode.image,
       type: "episode",
@@ -65,12 +93,13 @@ export function Home() {
       episodeData: {
         ...episode,
         title: baseTitle,
-        link: cleanLink, // Link limpo sem o prefixo 'episodio/'
+        link: cleanLink,
       },
     };
   };
 
   const navigate = useNavigate();
+  const setCurrentEpisode = useEpisodeStore((state) => state.setCurrentEpisode);
 
   const handleLastWatchedClick = (episode: AnimeEpisode) => {
     setCurrentEpisode(episode);
@@ -92,22 +121,16 @@ export function Home() {
           </h2>
 
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-zax-primary border-t-transparent"></div>
-            </div>
-          ) : isError ? (
-            <div className="text-center text-zax-text py-12">
-              <p>Erro ao carregar episódios recentes</p>
-              <button
-                onClick={() => refetch()}
-                className="mt-4 text-white hover:text-zax-primary transition-colors"
-              >
-                Tentar novamente
-              </button>
+            <div className="min-h-[300px] flex items-center justify-center">
+              <ProviderStatus
+                results={providerResults}
+                isLoading={isLoading}
+                centered={true}
+              />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {recentEpisodes?.map((episode) => {
+              {episodes.map((episode) => {
                 const formattedData = formatEpisodeData(episode);
                 return (
                   <MediaCard

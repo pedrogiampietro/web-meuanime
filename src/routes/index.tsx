@@ -4,8 +4,8 @@ import { Series } from "../pages/Series";
 import { Movies } from "../pages/Movies";
 import { Favorites } from "../pages/Favorites";
 import { AnimeDetails } from "../pages/AnimeDetails";
-import { WatchAnime } from "../pages/WatchAnime";
 import { App } from "../App";
+import { Watch } from "../pages/Watch";
 
 function ErrorBoundary() {
   return (
@@ -37,6 +37,10 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
+        path: "/anime/:slug",
+        element: <AnimeDetails />,
+      },
+      {
         path: "/series",
         element: <Series />,
       },
@@ -49,12 +53,8 @@ export const router = createBrowserRouter([
         element: <Favorites />,
       },
       {
-        path: "/anime/:id",
-        element: <AnimeDetails />,
-      },
-      {
         path: "/watch/:episodeId",
-        element: <WatchAnime />,
+        element: <Watch />,
       },
     ],
   },

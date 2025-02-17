@@ -1,9 +1,15 @@
 import { create } from "zustand";
-import { AnimeEpisode } from "../services/api";
+
+interface Episode {
+  title: string;
+  episode?: string;
+  playerUrl: string;
+  quality?: string;
+}
 
 interface EpisodeStore {
-  currentEpisode: AnimeEpisode | null;
-  setCurrentEpisode: (episode: AnimeEpisode) => void;
+  currentEpisode: Episode | null;
+  setCurrentEpisode: (episode: Episode) => void;
 }
 
 export const useEpisodeStore = create<EpisodeStore>((set) => ({

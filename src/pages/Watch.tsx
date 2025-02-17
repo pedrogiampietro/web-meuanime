@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
+import { VideoPlayer } from "../components/player/VideoPlayer";
 
 export function Watch() {
   const currentEpisode = useEpisodeStore((state) => state.currentEpisode);
@@ -10,7 +11,7 @@ export function Watch() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pt-24">
       <div className="bg-zax-card rounded-lg p-6">
         <h1 className="text-2xl font-bold text-white mb-4">
           {currentEpisode.title}
@@ -18,15 +19,20 @@ export function Watch() {
         </h1>
 
         <div className="aspect-video bg-black rounded-lg mb-4">
-          {currentEpisode.playerUrl && (
-            <iframe
-              src={currentEpisode.playerUrl}
-              className="w-full h-full"
-              title={currentEpisode.title}
-              allowFullScreen
-              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-            />
-          )}
+          {currentEpisode.playerUrl &&
+            (currentEpisode.playerUrl.includes("http") ? (
+              <iframe
+                src={currentEpisode.playerUrl}
+                className="w-full h-full"
+                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              />
+            ) : (
+              <VideoPlayer
+                url={currentEpisode.playerUrl}
+                title={currentEpisode.title}
+              />
+            ))}
         </div>
 
         <div className="text-zax-text mt-4">
