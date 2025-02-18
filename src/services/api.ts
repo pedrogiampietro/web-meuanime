@@ -1,6 +1,11 @@
 import axios from "axios";
 import { getFromCache, saveToCache } from "./cacheService";
-import { SearchResponse, AnimeDetails, AnimeResponse } from "../types/anime";
+import {
+  SearchResponse,
+  AnimeDetails,
+  AnimeResponse,
+  AnimeListItem,
+} from "../types/anime";
 
 const axiosInstance = axios.create({
   baseURL: "https://server-meuanime-production.up.railway.app/api",
