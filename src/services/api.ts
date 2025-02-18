@@ -3,7 +3,7 @@ import { getFromCache, saveToCache } from "./cacheService";
 import { SearchResponse, AnimeDetails, AnimeResponse } from "../types/anime";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: "https://server-meuanime-production.up.railway.app/api",
 });
 
 export type AnimeProvider = "animesonlinecc" | "goyabu";
