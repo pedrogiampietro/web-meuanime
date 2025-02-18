@@ -6,6 +6,8 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { AnimeResponse, AnimeListItem } from "../../types/anime";
+import { useTrendingAnimes } from "../../hooks/useTrendingAnimes";
+import { useNavigate } from "react-router-dom";
 
 import {
   addToFavorites,
@@ -15,50 +17,40 @@ import {
 export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const favorites = useAppSelector((state) => state.favorites.items);
-
-  const { data: trending, isLoading } = useQuery<AnimeResponse>({
-    queryKey: ["trending"],
-    queryFn: async (): Promise<AnimeResponse> => {
-      const response = await fetch(
-        "https://server-meuanime-production.up.railway.app/api/trending"
-      );
-      const data = await response.json();
-      return data;
-    },
-  });
+  const { trending, loading } = useTrendingAnimes();
 
   // Auto-play
   useEffect(() => {
     const timer = setInterval(() => {
-      if (trending?.animes) {
+      if (trending) {
         setCurrentIndex(
-          (current) => (current + 1) % Math.min(3, trending.animes.length)
+          (current) => (current + 1) % Math.min(3, trending.length)
         );
       }
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [trending?.animes]);
+  }, [trending]);
 
-  if (isLoading || !trending) {
+  if (loading || !trending) {
     return null;
   }
 
-  const heroItems = trending.animes.slice(0, 3).map((anime: AnimeListItem) => ({
+  const heroItems = trending.slice(0, 3).map((anime) => ({
     id: anime.slug,
     title: anime.title,
     description: "",
     imageUrl: anime.image,
-    type: "animes",
+    type: anime.type,
     rating: "All",
     year: new Date().getFullYear().toString(),
   }));
 
   const currentItem = heroItems[currentIndex];
-  const isFavorite = favorites.some(
-    (item) => Number(item.id) === Number(currentItem.id)
-  );
+  const animeId = `anime_${currentItem.id}`;
+  const isFavorite = favorites.some((item) => item.id === animeId);
 
   const handlePrevious = () => {
     setCurrentIndex(
@@ -72,18 +64,25 @@ export function HeroSlider() {
 
   const handleToggleFavorite = () => {
     if (isFavorite) {
-      dispatch(removeFromFavorites(String(currentItem.id)));
+      dispatch(removeFromFavorites(animeId));
     } else {
       dispatch(
         addToFavorites({
-          id: String(currentItem.id),
+          id: animeId,
           title: currentItem.title,
           imageUrl: currentItem.imageUrl || "",
           type: "animes",
-          rating: "0",
-          year: String(currentItem.year || new Date().getFullYear()),
+          rating: currentItem.type || "All",
+          year: String(new Date().getFullYear()),
         })
       );
+    }
+  };
+
+  const handlePlay = () => {
+    const currentAnime = trending[currentIndex];
+    if (currentAnime?.slug) {
+      navigate(`/anime/${currentAnime.slug}`);
     }
   };
 
@@ -110,7 +109,10 @@ export function HeroSlider() {
             </h1>
             <p className="text-zax-text mb-6">{currentItem.description}</p>
             <div className="flex gap-4">
-              <button className="flex items-center gap-2 bg-zax-primary text-white px-6 py-3 rounded-lg hover:bg-zax-primary/90 transition-colors">
+              <button
+                onClick={handlePlay}
+                className="flex items-center gap-2 bg-zax-primary text-white px-6 py-3 rounded-lg hover:bg-zax-primary/90 transition-colors"
+              >
                 <FaPlay />
                 <span>Assistir</span>
               </button>

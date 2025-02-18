@@ -6,6 +6,8 @@ const axiosInstance = axios.create({
   baseURL: "https://server-meuanime-production.up.railway.app/api",
 });
 
+// https://server-meuanime-production.up.railway.app
+
 export type AnimeProvider = "animesonlinecc" | "goyabu";
 
 export interface AnimeEpisode {
@@ -215,5 +217,66 @@ export const api = {
         error: error instanceof Error ? error.message : "Erro desconhecido",
       };
     }
+  },
+
+  getTrendingAnimes: async (
+    preferredProvider: AnimeProvider = "goyabu"
+  ): Promise<ProviderResult<AnimeListItem[]>[]> => {
+    const providers: AnimeProvider[] = ["animesonlinecc", "goyabu"];
+
+    const tryProvider = async (provider: AnimeProvider) => {
+      const cacheKey = `trending_${provider}`;
+      const cachedData = getFromCache<AnimeListItem[]>(cacheKey, 30);
+
+      if (cachedData && cachedData.length > 0) {
+        console.log(`Returning cached trending data from ${provider}`);
+        return cachedData;
+      }
+
+      try {
+        console.log(`Fetching trending data from ${provider}`);
+        const response = await axiosInstance.get<AnimeListItem[]>(
+          `/anime/${provider}/trending`
+        );
+
+        if (response.data && response.data.length > 0) {
+          saveToCache(cacheKey, response.data);
+          return response.data;
+        }
+        return null;
+      } catch (error) {
+        console.error(`Error fetching trending from ${provider}:`, error);
+        return null;
+      }
+    };
+
+    let data = await tryProvider(preferredProvider);
+    let successProvider = preferredProvider;
+
+    if (!data || data.length === 0) {
+      const alternativeProvider = providers.find(
+        (p) => p !== preferredProvider
+      );
+      if (alternativeProvider) {
+        console.log(
+          `Trying alternative provider for trending: ${alternativeProvider}`
+        );
+        data = await tryProvider(alternativeProvider);
+        if (data && data.length > 0) {
+          successProvider = alternativeProvider;
+        }
+      }
+    }
+
+    return providers.map((provider) => ({
+      data: provider === successProvider ? data : null,
+      provider,
+      success: provider === successProvider && !!data,
+      loading: false,
+      error:
+        provider === successProvider && !data
+          ? "No trending data available"
+          : undefined,
+    }));
   },
 };
