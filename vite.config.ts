@@ -7,4 +7,7 @@ export default defineConfig({
   css: {
     postcss: "./postcss.config.js",
   },
+  preview: {
+    allowedHosts: ["web-meuanime-production.up.railway.app"],
+  },
 });
