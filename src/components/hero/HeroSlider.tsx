@@ -4,8 +4,6 @@ import { FaPlay } from "react-icons/fa";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { useQuery } from "@tanstack/react-query";
-import { AnimeResponse, AnimeListItem } from "../../types/anime";
 import { useTrendingAnimes } from "../../hooks/useTrendingAnimes";
 import { useNavigate } from "react-router-dom";
 
