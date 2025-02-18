@@ -10,7 +10,7 @@ export function Watch() {
 
   useEffect(() => {
     if (currentEpisode) {
-      trackPageView(`/watch/${currentEpisode.link}`);
+      trackPageView(`/watch/${currentEpisode.playerUrl}`);
       trackEvent({
         action: "play_video",
         category: "content",
