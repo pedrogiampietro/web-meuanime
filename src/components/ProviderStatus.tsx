@@ -1,18 +1,11 @@
 import { useState, useEffect } from "react";
-import { AnimeProvider, AnimeEpisode, api } from "../services/api";
+import { api } from "../services/api";
 import { CircleNotch, CheckCircle, XCircle } from "phosphor-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ProviderStatusProps {
-  results: {
-    data: AnimeEpisode[] | null;
-    provider: AnimeProvider;
-    success: boolean;
-    loading: boolean;
-    error?: string;
-  }[];
   isLoading: boolean;
-  centered: boolean;
+  centered?: boolean;
 }
 
 type ProviderState = {

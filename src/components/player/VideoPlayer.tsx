@@ -42,7 +42,7 @@ export function VideoPlayer({ url, title }: VideoPlayerProps) {
               crossOrigin: "anonymous",
             },
             hlsOptions: {
-              xhrSetup: function (xhr: XMLHttpRequest) {
+              xhrSetup: function () {
                 // Remova esta linha que força credentials
                 // xhr.withCredentials = true;
               },

@@ -14,7 +14,13 @@ export function Movies() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {ANIME_CONTENT.movies.slice(0, 4).map((movie) => (
-              <MediaCard key={movie.id} {...movie} />
+              <MediaCard
+                key={movie.id}
+                {...{
+                  ...movie,
+                  id: String(movie.id),
+                }}
+              />
             ))}
           </div>
         </section>
@@ -24,7 +30,13 @@ export function Movies() {
           <h2 className="text-2xl font-bold text-white mb-6">Clássicos</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {ANIME_CONTENT.movies.slice(4).map((movie) => (
-              <MediaCard key={movie.id} {...movie} />
+              <MediaCard
+                key={movie.id}
+                {...{
+                  ...movie,
+                  id: String(movie.id),
+                }}
+              />
             ))}
           </div>
         </section>

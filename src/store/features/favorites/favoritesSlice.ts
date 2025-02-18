@@ -3,7 +3,6 @@ import {
   StoredFavorite,
   storageService,
 } from "../../../services/storageService";
-import { generateSlug } from "../../../utils/stringUtils";
 
 interface FavoritesState {
   items: StoredFavorite[];
@@ -45,13 +44,3 @@ const favoritesSlice = createSlice({
 
 export const { addToFavorites, removeFromFavorites } = favoritesSlice.actions;
 export default favoritesSlice.reducer;
-
-export const addFavorite = (anime: Anime) => {
-  const slug = generateSlug(anime.title, anime.year);
-  return {
-    payload: {
-      ...anime,
-      id: slug,
-    },
-  };
-};

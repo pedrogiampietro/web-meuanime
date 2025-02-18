@@ -1,15 +1,13 @@
-import { FaPlay } from "react-icons/fa";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   addToFavorites,
   removeFromFavorites,
 } from "../../store/features/favorites/favoritesSlice";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useEpisodeStore } from "../../store/episodeStore";
 import { AnimeEpisode } from "../../services/api";
-import { useState } from "react";
-import { slugify } from "../../utils/slugify";
+
 import { generateSlug } from "../../utils/stringUtils";
 
 interface MediaCardProps {
@@ -18,7 +16,7 @@ interface MediaCardProps {
   imageUrl: string;
   type: "movie" | "animes" | "episode";
   rating?: number | string;
-  year?: number;
+  year?: number | string;
   episodeNumber?: string;
   quality?: string;
   href?: string;
@@ -34,10 +32,8 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   rating,
   year,
   episodeNumber,
-  quality,
   href,
   episodeData,
-  onClick,
 }) => {
   const dispatch = useAppDispatch();
   const setCurrentEpisode = useEpisodeStore((state) => state.setCurrentEpisode);
@@ -61,7 +57,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     return `/anime/${cleanId}`;
   };
 
-  const handleEpisodeClick = (e: React.MouseEvent) => {
+  const handleEpisodeClick = () => {
     if (type === "episode" && episodeData) {
       setCurrentEpisode(episodeData);
     }

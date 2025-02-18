@@ -44,11 +44,11 @@ export function AnimeDetails() {
     if (!anime || !slug) return;
 
     if (isFavorite) {
-      dispatch(removeFromFavorites(animeId));
+      dispatch(removeFromFavorites(String(anime.id)));
     } else {
       dispatch(
         addToFavorites({
-          id: animeId,
+          id: String(anime.id),
           title: anime.title,
           imageUrl: anime.image,
           type: "animes",

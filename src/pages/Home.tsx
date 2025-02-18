@@ -8,9 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
 import { useState, useEffect } from "react";
 import { ProviderStatus } from "../components/ProviderStatus";
+import { slugify } from "../utils/slugify";
 
 interface FormattedEpisode {
-  id: number;
+  id: string;
   episodeId: string;
   title: string;
   imageUrl: string;
@@ -24,9 +25,7 @@ interface FormattedEpisode {
 
 export function Home() {
   const [isLoading, setIsLoading] = useState(true);
-  const [providerResults, setProviderResults] = useState<
-    ProviderResult<AnimeEpisode[]>[]
-  >([
+  const [_, setProviderResults] = useState<ProviderResult<AnimeEpisode[]>[]>([
     {
       data: null,
       provider: "animesonlinecc",
@@ -72,6 +71,9 @@ export function Home() {
     const baseTitle = match ? match[1].trim() : episode.title;
     const episodeNumber = episode.episode || match?.[2] || "1";
 
+    // Generate a unique ID from title and episode number
+    const uniqueId = `${slugify(baseTitle)}-${episodeNumber}`;
+
     // Limpar e formatar o link corretamente
     const cleanLink = episode.link
       .replace(/^https?:\/\/[^/]+\//, "") // Remove o domínio
@@ -81,7 +83,7 @@ export function Home() {
     const href = `/watch/${cleanLink}`;
 
     return {
-      id: Date.now(),
+      id: uniqueId,
       episodeId: episode.episode || "1",
       title: baseTitle,
       imageUrl: episode.image,
@@ -122,11 +124,7 @@ export function Home() {
 
           {isLoading ? (
             <div className="min-h-[300px] flex items-center justify-center">
-              <ProviderStatus
-                results={providerResults}
-                isLoading={isLoading}
-                centered={false}
-              />
+              <ProviderStatus isLoading={isLoading} centered={false} />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
