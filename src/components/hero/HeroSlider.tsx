@@ -20,7 +20,9 @@ export function HeroSlider() {
   const { data: trending, isLoading } = useQuery<AnimeResponse>({
     queryKey: ["trending"],
     queryFn: async (): Promise<AnimeResponse> => {
-      const response = await fetch("http://localhost:3000/api/trending");
+      const response = await fetch(
+        "https://server-meuanime-production.up.railway.app/api/trending"
+      );
       const data = await response.json();
       return data;
     },
