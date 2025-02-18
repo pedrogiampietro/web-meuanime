@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiMail, FiLock, FiUser, FiArrowLeft } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAnalytics } from "../../hooks/useAnalytics";
 
 export function AuthModal() {
   const {
@@ -20,6 +21,7 @@ export function AuthModal() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const { trackEvent } = useAnalytics();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,13 +32,32 @@ export function AuthModal() {
     try {
       if (modalType === "login") {
         await login(email);
+        trackEvent({
+          action: "login",
+          category: "engagement",
+          label: "email",
+        });
       } else if (modalType === "register") {
         await register(name, email);
+        trackEvent({
+          action: "sign_up",
+          category: "engagement",
+          label: "email",
+        });
       } else {
         await resetPassword();
+        trackEvent({
+          action: "password_reset",
+          category: "engagement",
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ocorreu um erro");
+      trackEvent({
+        action: "error",
+        category: modalType,
+        label: err instanceof Error ? err.message : "Ocorreu um erro",
+      });
     } finally {
       setIsLoading(false);
     }

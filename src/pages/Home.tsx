@@ -9,6 +9,7 @@ import { useEpisodeStore } from "../store/episodeStore";
 import { useState, useEffect } from "react";
 import { ProviderStatus } from "../components/ProviderStatus";
 import { slugify } from "../utils/slugify";
+import { useAnalytics } from "../hooks/useAnalytics";
 
 interface FormattedEpisode {
   id: string;
@@ -24,6 +25,7 @@ interface FormattedEpisode {
 }
 
 export function Home() {
+  const { trackPageView, trackEvent } = useAnalytics();
   const [isLoading, setIsLoading] = useState(true);
   const [_, setProviderResults] = useState<ProviderResult<AnimeEpisode[]>[]>([
     {
@@ -44,6 +46,8 @@ export function Home() {
   const [episodes, setEpisodes] = useState<AnimeEpisode[]>([]);
 
   useEffect(() => {
+    trackPageView("/");
+
     async function loadEpisodes() {
       try {
         const results = await api.getLatestEpisodes("goyabu");
@@ -104,6 +108,12 @@ export function Home() {
   const setCurrentEpisode = useEpisodeStore((state) => state.setCurrentEpisode);
 
   const handleLastWatchedClick = (episode: AnimeEpisode) => {
+    trackEvent({
+      action: "select_content",
+      category: "episode",
+      label: `${episode.title} - Episode ${episode.episode}`,
+    });
+
     setCurrentEpisode(episode);
     setTimeout(() => {
       navigate(`/watch/${episode.link}`);

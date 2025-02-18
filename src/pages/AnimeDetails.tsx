@@ -9,6 +9,7 @@ import {
 } from "../store/features/favorites/favoritesSlice";
 import { api } from "../services/api";
 import { AnimeDetails as AnimeDetailsType } from "../types/anime";
+import { useAnalytics } from "../hooks/useAnalytics";
 
 export function AnimeDetails() {
   const { slug } = useParams<{ slug: string }>();
@@ -21,6 +22,7 @@ export function AnimeDetails() {
   const isFavorite = favorites.some((item) => item.id === animeId);
   const navigate = useNavigate();
   const setCurrentEpisode = useEpisodeStore((state) => state.setCurrentEpisode);
+  const { trackPageView, trackEvent } = useAnalytics();
 
   useEffect(() => {
     async function loadAnimeDetails() {
@@ -40,8 +42,25 @@ export function AnimeDetails() {
     loadAnimeDetails();
   }, [slug]);
 
+  useEffect(() => {
+    if (anime) {
+      trackPageView(`/anime/${slug}`);
+      trackEvent({
+        action: "view_item",
+        category: "anime",
+        label: anime.title,
+      });
+    }
+  }, [anime, slug]);
+
   const handleFavoriteClick = () => {
     if (!anime || !slug) return;
+
+    trackEvent({
+      action: isFavorite ? "remove_from_favorites" : "add_to_favorites",
+      category: "engagement",
+      label: anime.title,
+    });
 
     if (isFavorite) {
       dispatch(removeFromFavorites(String(anime.id)));

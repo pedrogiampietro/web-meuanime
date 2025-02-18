@@ -1,9 +1,23 @@
 import { Navigate } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
 import { VideoPlayer } from "../components/player/VideoPlayer";
+import { useAnalytics } from "../hooks/useAnalytics";
+import { useEffect } from "react";
 
 export function Watch() {
+  const { trackPageView, trackEvent } = useAnalytics();
   const currentEpisode = useEpisodeStore((state) => state.currentEpisode);
+
+  useEffect(() => {
+    if (currentEpisode) {
+      trackPageView(`/watch/${currentEpisode.link}`);
+      trackEvent({
+        action: "play_video",
+        category: "content",
+        label: `${currentEpisode.title} - Episode ${currentEpisode.episode}`,
+      });
+    }
+  }, [currentEpisode]);
 
   if (!currentEpisode) {
     console.log("Redirecting to home - no episode data");
