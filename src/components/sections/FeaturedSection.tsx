@@ -26,7 +26,7 @@ export function FeaturedSection() {
         {featuredAnimes.map((anime) => (
           <MediaCard
             key={anime.id}
-            id={anime.id}
+            id={String(anime.id)}
             title={anime.title}
             imageUrl={anime.image}
             type="animes"

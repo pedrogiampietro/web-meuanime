@@ -5,23 +5,23 @@ import { ProviderStatus } from "../components/ProviderStatus";
 import { slugify } from "../utils/slugify";
 
 export function Animes() {
-  const { animes, loading, error, page, setPage, providerResults } =
-    useAnimes();
+  const { animes, loading, error, page, setPage } = useAnimes();
 
   const createUniqueId = (anime: (typeof animes)[0]) => {
     return slugify(anime.title);
   };
+
+  // const transformedResults = providerResults.map((result) => ({
+  //   ...result,
+  //   data: result.data?.animes || null,
+  // }));
 
   if (loading) {
     return (
       <div className="p-8 pt-24 text-white">
         <div className="max-w-[1920px] mx-auto">
           <h1 className="text-4xl font-bold mb-12">Animes</h1>
-          <ProviderStatus
-            results={providerResults}
-            isLoading={loading}
-            centered={false}
-          />
+          <ProviderStatus isLoading={loading} centered={false} />
         </div>
       </div>
     );
@@ -61,7 +61,7 @@ export function Animes() {
                 imageUrl={anime.image}
                 type="animes"
                 rating="0"
-                year={new Date().getFullYear()}
+                year={String(new Date().getFullYear())}
               />
             ))}
           </div>

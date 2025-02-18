@@ -19,7 +19,7 @@ export function Favorites() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {favorites.map((item) => (
-              <MediaCard key={item.id} {...item} />
+              <MediaCard key={item.id} {...item} year={Number(item.year)} />
             ))}
           </div>
         )}

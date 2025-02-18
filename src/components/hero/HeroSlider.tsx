@@ -5,50 +5,52 @@ import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { useQuery } from "@tanstack/react-query";
+import { AnimeResponse, AnimeListItem } from "../../types/anime";
 
 import {
   addToFavorites,
   removeFromFavorites,
 } from "../../store/features/favorites/favoritesSlice";
-import type { IAnimeResult } from "@consumet/extensions";
 
 export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
 
-  const { data: trending, isLoading } = useQuery({
+  const { data: trending, isLoading } = useQuery<AnimeResponse>({
     queryKey: ["trending"],
-    queryFn: () => "",
+    queryFn: async (): Promise<AnimeResponse> => {
+      const response = await fetch("http://localhost:3000/api/trending");
+      const data = await response.json();
+      return data;
+    },
   });
 
   // Auto-play
   useEffect(() => {
     const timer = setInterval(() => {
-      if (trending?.results) {
+      if (trending?.animes) {
         setCurrentIndex(
-          (current) => (current + 1) % Math.min(3, trending.results.length)
+          (current) => (current + 1) % Math.min(3, trending.animes.length)
         );
       }
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [trending?.results]);
+  }, [trending?.animes]);
 
   if (isLoading || !trending) {
     return null;
   }
 
-  const heroItems = trending.results.slice(0, 3).map((anime: IAnimeResult) => ({
-    id: Number(anime.id),
+  const heroItems = trending.animes.slice(0, 3).map((anime: AnimeListItem) => ({
+    id: anime.slug,
     title: anime.title,
-    description: anime.genres?.join(", ") || "",
+    description: "",
     imageUrl: anime.image,
     type: "animes",
     rating: "All",
-    year: anime.releaseDate
-      ? parseInt(anime.releaseDate)
-      : new Date().getFullYear(),
+    year: new Date().getFullYear().toString(),
   }));
 
   const currentItem = heroItems[currentIndex];
@@ -66,21 +68,18 @@ export function HeroSlider() {
     setCurrentIndex((current) => (current + 1) % heroItems.length);
   };
 
-  const handleFavoriteClick = () => {
+  const handleToggleFavorite = () => {
     if (isFavorite) {
-      dispatch(removeFromFavorites(Number(currentItem.id)));
+      dispatch(removeFromFavorites(String(currentItem.id)));
     } else {
       dispatch(
         addToFavorites({
-          id: Number(currentItem.id),
-          title:
-            typeof currentItem.title === "string"
-              ? currentItem.title
-              : currentItem.title.userPreferred || "",
+          id: String(currentItem.id),
+          title: currentItem.title,
           imageUrl: currentItem.imageUrl || "",
           type: "animes",
           rating: "0",
-          year: currentItem.year,
+          year: String(currentItem.year || new Date().getFullYear()),
         })
       );
     }
@@ -100,18 +99,12 @@ export function HeroSlider() {
           <div className="absolute inset-0 bg-gradient-to-t from-zax-bg via-transparent to-transparent" />
           <img
             src={currentItem.imageUrl || ""}
-            alt={
-              typeof currentItem.title === "string"
-                ? currentItem.title
-                : currentItem.title.userPreferred || ""
-            }
+            alt={currentItem.title}
             className="w-full h-full object-cover"
           />
           <div className="absolute bottom-0 left-0 p-8 max-w-2xl">
             <h1 className="text-4xl font-bold text-white mb-2">
-              {typeof currentItem.title === "string"
-                ? currentItem.title
-                : currentItem.title.userPreferred || ""}
+              {currentItem.title}
             </h1>
             <p className="text-zax-text mb-6">{currentItem.description}</p>
             <div className="flex gap-4">
@@ -120,7 +113,7 @@ export function HeroSlider() {
                 <span>Assistir</span>
               </button>
               <button
-                onClick={handleFavoriteClick}
+                onClick={handleToggleFavorite}
                 className="flex items-center justify-center w-12 h-12 bg-zax-button text-white rounded-lg hover:bg-zax-primary transition-colors"
               >
                 {isFavorite ? <MdFavorite /> : <MdFavoriteBorder />}
@@ -146,7 +139,7 @@ export function HeroSlider() {
 
       {/* Dots Indicator */}
       <div className="absolute bottom-4 right-4 flex gap-2">
-        {heroItems.map((_, index) => (
+        {heroItems.map((_: unknown, index: number) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}

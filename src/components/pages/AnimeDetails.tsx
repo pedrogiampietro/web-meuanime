@@ -21,14 +21,16 @@ const AnimeDetails: React.FC = () => {
     if (id && animeData) {
       dispatch(
         addToFavorites({
-          id: Number(id),
+          id: String(id),
           title: animeData.title,
           imageUrl: animeData.image,
           type: "animes",
-          rating: "0", // Change to string
-          year: animeData.releaseDate
-            ? parseInt(animeData.releaseDate)
-            : new Date().getFullYear(),
+          rating: "0",
+          year: String(
+            animeData.releaseDate
+              ? parseInt(animeData.releaseDate)
+              : new Date().getFullYear()
+          ),
         })
       );
     }

@@ -4,7 +4,7 @@ export interface StoredFavorite {
   id: string;
   title: string;
   imageUrl: string;
-  type: string;
+  type: "movie" | "animes" | "episode";
   rating: string;
   year: string;
 }

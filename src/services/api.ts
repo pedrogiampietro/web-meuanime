@@ -31,15 +31,6 @@ export const api = {
     preferredProvider: AnimeProvider = "goyabu"
   ): Promise<ProviderResult<AnimeEpisode[]>[]> => {
     const providers: AnimeProvider[] = ["animesonlinecc", "goyabu"];
-    const results: ProviderResult<AnimeEpisode[]>[] = providers.map(
-      (provider) => ({
-        data: null,
-        provider,
-        success: false,
-        loading: provider === preferredProvider,
-        error: undefined,
-      })
-    );
 
     const tryProvider = async (provider: AnimeProvider) => {
       const cacheKey = `latestEpisodes_${provider}`;

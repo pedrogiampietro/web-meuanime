@@ -1,3 +1,5 @@
+import { ProviderResult } from "../services/api";
+
 export interface AnimeEpisode {
   number: number;
   title: string;
@@ -7,6 +9,7 @@ export interface AnimeEpisode {
 }
 
 export interface AnimeDetails {
+  id: string;
   title: string;
   image: string;
   synopsis: string;
@@ -48,9 +51,29 @@ export interface AnimeResponse {
 
 export interface Anime {
   id: string;
-  number: number;
   title: string;
-  url: string;
-  thumbnail: string;
-  animeTitle: string;
+  url?: string;
+  thumbnail?: string;
+  animeTitle?: string;
+  number?: number;
+  imageUrl?: string;
+  type?: string;
+  rating?: string;
+  year?: string;
 }
+
+export interface AnimeListItem {
+  title: string;
+  link: string;
+  image: string;
+  type: string;
+  slug: string;
+  episode?: string;
+  quality?: string;
+  playerUrl?: string;
+  provider?: string;
+}
+
+export type ProviderAnimeResult = Omit<ProviderResult<AnimeEpisode>, "data"> & {
+  data: AnimeListItem[] | null;
+};
