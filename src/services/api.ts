@@ -13,6 +13,8 @@ const axiosInstance = axios.create({
 
 // https://server-meuanime-production.up.railway.app
 
+//https://animeshd.to
+
 export type AnimeProvider = "animesonlinecc" | "goyabu";
 
 export interface AnimeEpisode {

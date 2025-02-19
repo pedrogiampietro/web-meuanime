@@ -32,7 +32,7 @@ export function HeroSlider() {
     return () => clearInterval(timer);
   }, [trending]);
 
-  if (loading || !trending) {
+  if (loading || !trending || trending.length === 0) {
     return null;
   }
 
@@ -47,6 +47,10 @@ export function HeroSlider() {
   }));
 
   const currentItem = heroItems[currentIndex];
+  if (!currentItem) {
+    return null;
+  }
+
   const animeId = `anime_${currentItem.id}`;
   const isFavorite = favorites.some((item) => item.id === animeId);
 
@@ -97,7 +101,7 @@ export function HeroSlider() {
         >
           <div className="absolute inset-0 bg-gradient-to-t from-zax-bg via-transparent to-transparent" />
           <img
-            src={currentItem.imageUrl || ""}
+            src={currentItem.imageUrl}
             alt={currentItem.title}
             className="w-full h-full object-cover"
           />
