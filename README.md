@@ -4,7 +4,7 @@
   <h1>MeuAnime Zax</h1>
   <p>
     <a href="https://discord.gg/s9kUZw7CqP">
-      <img src="https://img.shields.io/discord/1328474718193586226?color=%237289DA&label=Discord&logo=discord&logoColor=white&style=for-the-badge" alt="Discord">
+      <img src="https://img.shields.io/discord/938087363895259176?color=%237289DA&label=Discord&logo=discord&logoColor=white&style=for-the-badge" alt="Discord">
     </a>
     <a href="https://github.com/pedrogiampietro/web-meuanime/stargazers">
       <img src="https://img.shields.io/github/stars/pedrogiampietro/web-meuanime?color=%23A855F7&logo=github&style=for-the-badge" alt="Stars">
