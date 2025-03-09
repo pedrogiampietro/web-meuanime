@@ -86,16 +86,16 @@ export function Home() {
 
     // Limpar e formatar o link corretamente
     const cleanLink = episode.link
-      .replace(/^https?:\/\/[^/]+\//, "") // Remove o domínio
-      .replace(/^episodio\//, "") // Remove o prefixo 'episodio/'
-      .replace(/\/$/, ""); // Remove a barra final se existir
+      .replace(/^https?:\/\/[^/]+\//, "")
+      .replace(/^episodio\//, "")
+      .replace(/\/$/, "");
 
     const href = `/watch/${cleanLink}`;
 
     return {
       id: uniqueId,
       episodeId: episode.episode || "1",
-      title: cleanTitle, // Usa o título limpo
+      title: cleanTitle,
       imageUrl: episode.image,
       type: "episode",
       year: new Date().getFullYear(),
@@ -104,7 +104,7 @@ export function Home() {
       href,
       episodeData: {
         ...episode,
-        title: cleanTitle, // Usa o título limpo também aqui
+        title: cleanTitle,
         link: cleanLink,
       },
     };
@@ -126,7 +126,7 @@ export function Home() {
     }, 0);
   };
 
-  console.log(episodes);
+  console.log("🚀 ~ episodes:", episodes);
 
   return (
     <div className="w-full">
