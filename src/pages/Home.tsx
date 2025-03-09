@@ -71,12 +71,18 @@ export function Home() {
   }, []);
 
   const formatEpisodeData = (episode: AnimeEpisode): FormattedEpisode => {
-    const match = episode.title.match(/(.*?)(?:\s*Episodio\s*(\d+))?$/i);
+    // Extrai o título base e o número do episódio
+    const match = episode.title.match(
+      /(.*?)(?:\s*(?:Episodio|Episódio)\s*(\d+))?$/i
+    );
     const baseTitle = match ? match[1].trim() : episode.title;
     const episodeNumber = episode.episode || match?.[2] || "1";
 
+    // Remove "Dublado" do título
+    const cleanTitle = baseTitle.replace(/\s*dublado\s*/i, "").trim();
+
     // Generate a unique ID from title and episode number
-    const uniqueId = `${slugify(baseTitle)}-${episodeNumber}`;
+    const uniqueId = `${slugify(cleanTitle)}-${episodeNumber}`;
 
     // Limpar e formatar o link corretamente
     const cleanLink = episode.link
@@ -89,7 +95,7 @@ export function Home() {
     return {
       id: uniqueId,
       episodeId: episode.episode || "1",
-      title: baseTitle,
+      title: cleanTitle, // Usa o título limpo
       imageUrl: episode.image,
       type: "episode",
       year: new Date().getFullYear(),
@@ -98,7 +104,7 @@ export function Home() {
       href,
       episodeData: {
         ...episode,
-        title: baseTitle,
+        title: cleanTitle, // Usa o título limpo também aqui
         link: cleanLink,
       },
     };
@@ -119,6 +125,8 @@ export function Home() {
       navigate(`/watch/${episode.link}`);
     }, 0);
   };
+
+  console.log(episodes);
 
   return (
     <div className="w-full">

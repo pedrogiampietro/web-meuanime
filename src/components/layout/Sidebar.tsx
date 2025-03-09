@@ -55,7 +55,7 @@ export function Sidebar() {
             </motion.span>
           </Link>
 
-          <Link
+          {/* <Link
             to="/filmes"
             className="flex items-center gap-3 text-zax-text hover:text-white hover:bg-zax-button rounded-lg p-3 transition-all"
           >
@@ -66,7 +66,7 @@ export function Sidebar() {
             >
               Filmes
             </motion.span>
-          </Link>
+          </Link> */}
         </nav>
 
         <motion.div animate={{ opacity: isExpanded ? 1 : 0 }} className="mt-8">

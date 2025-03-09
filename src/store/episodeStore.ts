@@ -2,9 +2,13 @@ import { create } from "zustand";
 
 interface Episode {
   title: string;
-  episode?: string;
+  episode: string;
   playerUrl: string;
   quality?: string;
+  image?: string;
+  thumbnail?: string;
+  link?: string;
+  provider?: "goyabu" | "animesonlinecc";
 }
 
 interface EpisodeStore {
@@ -14,5 +18,7 @@ interface EpisodeStore {
 
 export const useEpisodeStore = create<EpisodeStore>((set) => ({
   currentEpisode: null,
-  setCurrentEpisode: (episode) => set({ currentEpisode: episode }),
+  setCurrentEpisode: (episode) => {
+    set({ currentEpisode: episode });
+  },
 }));

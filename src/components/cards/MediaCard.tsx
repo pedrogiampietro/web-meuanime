@@ -1,4 +1,5 @@
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
+import { AiFillStar } from "react-icons/ai";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   addToFavorites,
@@ -7,8 +8,9 @@ import {
 import { Link } from "react-router-dom";
 import { useEpisodeStore } from "../../store/episodeStore";
 import { AnimeEpisode } from "../../services/api";
-
 import { generateSlug } from "../../utils/stringUtils";
+import { useIMDB } from "../../hooks/useIMDB";
+import { SiImdb } from "react-icons/si";
 
 interface MediaCardProps {
   id: string;
@@ -44,6 +46,9 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   );
   const isFavorite = favorites.some((item) => item.id === generatedId);
 
+  const { imdbData, isLoading } = useIMDB(title);
+  const hasValidRating = imdbData?.rating && imdbData.rating !== "N/A";
+
   const getWatchLink = () => {
     if (href) return href;
     if (type === "episode" && episodeData) {
@@ -64,6 +69,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   };
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
 
     if (isFavorite) {
@@ -83,36 +89,74 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   };
 
   return (
-    <div className="group relative rounded-lg overflow-hidden">
-      <Link to={getWatchLink()} onClick={handleEpisodeClick} className="block">
-        <div className="relative aspect-video">
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute bottom-0 p-4 w-full">
-              <h3 className="text-white font-medium mb-1">
-                {title} {type === "episode" && `- Episódio ${episodeNumber}`}
-              </h3>
-              <div className="flex items-center gap-2 text-sm text-zax-text">
-                {rating && <span>{rating}</span>}
-                {year && <span>•</span>}
-                {year && <span>{year}</span>}
-                <span>•</span>
-                <span className="capitalize">{type}</span>
-              </div>
+    <Link
+      to={getWatchLink()}
+      onClick={handleEpisodeClick}
+      className="group relative block rounded-lg overflow-hidden bg-zax-secondary transition-transform duration-300 hover:-translate-y-1"
+    >
+      <div className="relative aspect-[2/3]">
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100" />
+
+        {/* Rating Badge */}
+        <div className="absolute top-2 left-2 flex items-center gap-2">
+          {(isLoading || hasValidRating) && (
+            <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white px-2 py-1 rounded">
+              {isLoading ? (
+                <div className="flex items-center gap-1">
+                  <SiImdb className="text-[#f3ce13]" />
+                  <span>...</span>
+                </div>
+              ) : hasValidRating ? (
+                <>
+                  <SiImdb className="text-[#f3ce13]" />
+                  <span>{imdbData?.rating}</span>
+                </>
+              ) : null}
             </div>
+          )}
+
+          {rating && !hasValidRating && (
+            <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white px-2 py-1 rounded">
+              <AiFillStar className="text-yellow-400" />
+              <span>{rating}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Favorite Button */}
+        <button
+          onClick={handleToggleFavorite}
+          className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-full text-white transition-colors hover:bg-zax-primary/80"
+        >
+          {isFavorite ? (
+            <MdFavorite className="text-red-500" />
+          ) : (
+            <MdFavoriteBorder className="text-white" />
+          )}
+        </button>
+
+        {/* Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <h3 className="text-white font-medium text-lg leading-tight mb-1 line-clamp-2">
+            {title}
+            {type === "episode" && episodeNumber && (
+              <span className="block text-sm text-gray-300">
+                Episódio {episodeNumber}
+              </span>
+            )}
+          </h3>
+          <div className="flex items-center gap-2 text-sm text-gray-300">
+            {year && <span>{year}</span>}
+            {year && type && <span>•</span>}
+            {type && <span className="capitalize">{type}</span>}
           </div>
         </div>
-      </Link>
-      <button
-        onClick={handleToggleFavorite}
-        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-zax-primary"
-      >
-        {isFavorite ? <MdFavorite /> : <MdFavoriteBorder />}
-      </button>
-    </div>
+      </div>
+    </Link>
   );
 };
