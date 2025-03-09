@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { AiFillHome } from "react-icons/ai";
 import { BiMoviePlay } from "react-icons/bi";
-import { MdLocalMovies, MdFavorite } from "react-icons/md";
+import { MdFavorite } from "react-icons/md";
 import { FiChevronLeft } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { useSidebar } from "../../contexts/SidebarContext";
