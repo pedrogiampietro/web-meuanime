@@ -1,13 +1,24 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
 import { VideoPlayer } from "../components/player/VideoPlayer";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useEffect, useState } from "react";
 import { AiFillStar } from "react-icons/ai";
-import { IoTimeOutline } from "react-icons/io5";
+import { IoTimeOutline, IoCalendarOutline } from "react-icons/io5";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import { SiImdb } from "react-icons/si";
-import { BsInfoCircle, BsListUl, BsPeople, BsPerson } from "react-icons/bs";
+import {
+  BsInfoCircle,
+  BsListUl,
+  BsPeople,
+  BsPerson,
+  BsPlayCircle,
+} from "react-icons/bs";
+import { useWatchHistory } from "../hooks/useWatchHistory";
+import { useStore } from "../store/useStore";
+import { toast } from "react-hot-toast";
+import { useAuth } from "../contexts/AuthContext";
+import { api } from "../services/api";
 
 interface IMDBData {
   title: string;
@@ -64,6 +75,187 @@ export function Watch() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isOverviewOpen, setIsOverviewOpen] = useState(true);
   const [imdbData, setImdbData] = useState<IMDBData | null>(null);
+  const params = useParams();
+  const episodeId = params.episodeId;
+  const {
+    updateWatchHistory,
+    isFullyAuthenticated,
+    isEpisodeInHistory,
+    watchHistory,
+  } = useWatchHistory();
+  const { user } = useStore();
+  const { user: authUser } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
+  const [alreadySaved, setAlreadySaved] = useState(false);
+
+  // Efeito para logar informações de autenticação
+  useEffect(() => {
+    console.log("👤 Watch Component - Auth Info:", {
+      storeUser: user,
+      authUser,
+      isFullyAuthenticated,
+      episodeId,
+      currentEpisode: currentEpisode?.episode,
+      params,
+    });
+  }, [user, authUser, isFullyAuthenticated, episodeId, currentEpisode, params]);
+
+  // Efeito para verificar se o episódio já está no histórico
+  useEffect(() => {
+    if (watchHistory && currentEpisode) {
+      // Usar o ID fixo conforme o exemplo
+      const animeId = "49582";
+
+      // Extrair o número do episódio
+      let episodeNumber = 1;
+      if (currentEpisode.episode) {
+        const episodeMatch = currentEpisode.episode.match(/\d+/);
+        if (episodeMatch) {
+          episodeNumber = parseInt(episodeMatch[0], 10);
+        }
+      }
+
+      const isAlreadySaved = isEpisodeInHistory(animeId, episodeNumber);
+      setAlreadySaved(isAlreadySaved);
+
+      console.log("🔍 Verificando se episódio já está no histórico:", {
+        animeId,
+        episodeNumber,
+        isAlreadySaved,
+      });
+    }
+  }, [watchHistory, currentEpisode, isEpisodeInHistory]);
+
+  // Função para salvar o progresso
+  const saveProgress = async () => {
+    if (isSaving) {
+      console.log("⏳ Já existe uma operação de salvamento em andamento");
+      return;
+    }
+
+    console.log("🔍 saveProgress - Verificando condições:", {
+      hasCurrentEpisode: !!currentEpisode,
+      isFullyAuthenticated,
+      storeUserId: user?.id,
+      authUserId: authUser?.id,
+      episodeId,
+      currentEpisode,
+      alreadySaved,
+    });
+
+    // Usar o ID do usuário do authUser se o user do store não estiver disponível
+    const userId = user?.id || authUser?.id;
+
+    if (!currentEpisode || !isFullyAuthenticated || !userId) {
+      if (!isFullyAuthenticated) {
+        toast.error("Faça login para salvar seu progresso");
+      } else if (!userId) {
+        console.error("❌ ID do usuário não encontrado");
+        toast.error(
+          "Erro ao identificar usuário. Por favor, faça login novamente."
+        );
+      } else if (!currentEpisode) {
+        console.error("❌ Episódio atual não encontrado");
+      }
+      return;
+    }
+
+    // Extrair o número do episódio e garantir que seja um número válido
+    let episodeNumber = 1; // Valor padrão
+
+    if (currentEpisode.episode) {
+      // Tenta extrair apenas os dígitos do número do episódio
+      const episodeMatch = currentEpisode.episode.match(/\d+/);
+      if (episodeMatch) {
+        episodeNumber = parseInt(episodeMatch[0], 10);
+      }
+    }
+
+    // Verificar se o número do episódio é válido
+    if (isNaN(episodeNumber)) {
+      console.error("❌ Número do episódio inválido:", currentEpisode.episode);
+      episodeNumber = 1; // Usar valor padrão se for inválido
+    }
+
+    // Usar o ID fixo conforme o exemplo
+    const animeId = "49582";
+
+    // Verificar se o episódio já está no histórico
+    if (alreadySaved) {
+      console.log(
+        "ℹ️ Episódio já está no histórico, não é necessário salvar novamente"
+      );
+      toast.success("Episódio já está marcado como assistido!");
+      return;
+    }
+
+    const watchData = {
+      user_id: userId,
+      anime_id: animeId,
+      episode_number: episodeNumber,
+      progress_percentage: 0,
+      watched_at: new Date().toISOString(),
+    };
+
+    console.log("🎬 Tentando salvar progresso do episódio:", {
+      ...watchData,
+      currentEpisode,
+    });
+
+    try {
+      setIsSaving(true);
+      // Chamar diretamente a API em vez de usar a mutação do React Query
+      const response = await api.createOrUpdateWatchHistory(watchData);
+      console.log("✅ Progresso salvo com sucesso:", response);
+      toast.success("Progresso salvo com sucesso!");
+      setAlreadySaved(true);
+    } catch (error: any) {
+      console.error("❌ Erro ao salvar progresso:", error);
+
+      // Verificar se é um erro de duplicação
+      if (
+        error.response?.status === 400 &&
+        error.response?.data?.error?.includes("duplicate key value")
+      ) {
+        toast.success("Episódio já está marcado como assistido!");
+        setAlreadySaved(true);
+      } else {
+        toast.error(
+          "Erro ao salvar seu progresso. Por favor, tente novamente."
+        );
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Efeito para salvar o histórico quando o episódio é carregado
+  useEffect(() => {
+    if (
+      currentEpisode &&
+      isFullyAuthenticated &&
+      (user?.id || authUser?.id) &&
+      episodeId
+    ) {
+      console.log(
+        "🔄 Detectada mudança no episódio, tentando salvar progresso:",
+        {
+          currentEpisode,
+          isFullyAuthenticated,
+          storeUserId: user?.id,
+          authUserId: authUser?.id,
+          episodeId,
+        }
+      );
+      saveProgress();
+    }
+  }, [
+    currentEpisode?.episode,
+    isFullyAuthenticated,
+    user?.id,
+    authUser?.id,
+    episodeId,
+  ]);
 
   useEffect(() => {
     if (currentEpisode) {
@@ -74,9 +266,77 @@ export function Watch() {
         label: `${currentEpisode.title} - Episode ${currentEpisode.episode}`,
       });
 
-      fetchIMDBData(currentEpisode.title);
+      // Buscar dados do IMDB
+      if (currentEpisode.title) {
+        fetchIMDBData(currentEpisode.title);
+      }
     }
   }, [currentEpisode]);
+
+  // Função para buscar dados do IMDB
+  const fetchIMDBData = async (title: string) => {
+    try {
+      const cleanedTitle = cleanTitleForSearch(title);
+      const apiUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(
+        cleanedTitle
+      )}&apikey=${import.meta.env.VITE_OMDB_API_KEY}`;
+
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+
+      if (data.Response === "True") {
+        const formattedData = formatImdbData(data);
+        setImdbData(formattedData);
+      } else {
+        // Se não encontrar com o título limpo, tenta buscar com palavras-chave
+        const keywords = cleanedTitle.split(" ")[0];
+
+        const retryUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(
+          keywords
+        )}&apikey=${import.meta.env.VITE_OMDB_API_KEY}`;
+
+        const retryResponse = await fetch(retryUrl);
+        const retryData = await retryResponse.json();
+
+        if (retryData.Response === "True") {
+          const formattedData = formatImdbData(retryData);
+          setImdbData(formattedData);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados do IMDB:", error);
+    }
+  };
+
+  // Função para limpar o título para busca
+  const cleanTitleForSearch = (title: string): string => {
+    return (
+      title
+        .replace(/\s*\([^)]*\)\s*/g, " ") // Remove texto entre parênteses
+        .replace(/\s*\[[^\]]*\]\s*/g, " ") // Remove texto entre colchetes
+        .replace(/\s*-\s*.*$/, "") // Remove tudo após um hífen
+        .replace(/-\s*\d+$/i, "") // Remove números no final após hífen
+        .replace(/\s+\d+$/i, "") // Remove números soltos no final
+        // Remove caracteres especiais e pontuação
+        .replace(/[:.]/g, " ")
+        // Remove texto entre parênteses
+        .replace(/\([^)]*\)/g, "")
+        // Remove texto entre colchetes
+        .replace(/\[[^\]]*\]/g, "")
+        // Limpa espaços extras
+        .trim()
+        // Remove espaços duplos
+        .replace(/\s+/g, " ")
+    );
+  };
+
+  // Se não tiver episódio atual, redirecionar para a home
+  if (!currentEpisode) {
+    return <Navigate to="/" />;
+  }
+
+  const fallbackImage =
+    "https://via.placeholder.com/300x450?text=No+Poster+Available";
 
   const formatImdbData = (data: any): IMDBData => {
     // Função auxiliar para tratar valores N/A
@@ -109,117 +369,47 @@ export function Watch() {
     };
   };
 
-  const cleanTitleForSearch = (title: string): string => {
-    return (
-      title
-        // Remove números de episódios e temporadas
-        .replace(/episódio\s+\d+/i, "")
-        .replace(/episodio\s+\d+/i, "")
-        .replace(/temporada\s+\d+/i, "")
-        .replace(/season\s+\d+/i, "")
-        // Remove sufixos comuns de anime
-        .replace(/dublado/i, "")
-        .replace(/legendado/i, "")
-        .replace(/-\s*\d+$/i, "") // Remove números no final após hífen
-        .replace(/\s+\d+$/i, "") // Remove números soltos no final
-        // Remove caracteres especiais e pontuação
-        .replace(/[:.]/g, " ")
-        // Remove texto entre parênteses
-        .replace(/\([^)]*\)/g, "")
-        // Remove texto entre colchetes
-        .replace(/\[[^\]]*\]/g, "")
-        // Limpa espaços extras
-        .trim()
-        // Remove espaços duplos
-        .replace(/\s+/g, " ")
-    );
-  };
-
-  const fetchIMDBData = async (title: string) => {
-    try {
-      const cleanedTitle = cleanTitleForSearch(title);
-      const apiUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(
-        cleanedTitle
-      )}&apikey=${import.meta.env.VITE_OMDB_API_KEY}`;
-
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-
-      if (data.Response === "True") {
-        const formattedData = formatImdbData(data);
-        setImdbData(formattedData);
-      } else {
-        // Se não encontrar com o título limpo, tenta buscar com palavras-chave
-        const keywords = cleanedTitle.split(" ")[0];
-
-        const retryUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(
-          keywords
-        )}&apikey=${import.meta.env.VITE_OMDB_API_KEY}`;
-
-        const retryResponse = await fetch(retryUrl);
-        const retryData = await retryResponse.json();
-
-        if (retryData.Response === "True") {
-          const formattedData = formatImdbData(retryData);
-          setImdbData(formattedData);
-        } else {
-          setImdbData(null);
-        }
-      }
-    } catch (error) {
-      console.error("❌ Erro ao buscar dados do OMDB:", {
-        searchTitle: title,
-        error: error instanceof Error ? error.message : "Erro desconhecido",
-      });
-      setImdbData(null);
-    }
-  };
-
-  if (!currentEpisode) {
-    return <Navigate to="/" replace />;
-  }
-
-  const fallbackImage =
-    "https://placehold.co/1920x1080/1a1d29/white?text=No+Image+Available";
-
+  // Renderiza o status do anime
   const renderStatus = () => {
-    if (!imdbData?.type) return null;
+    if (!imdbData) return null;
+
     return (
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-400">Status:</span>
-        <span className="text-white">Released</span>
+      <div className="flex items-center gap-2">
+        <IoCalendarOutline size={20} className="text-purple-400 shrink-0" />
+        <span className="text-gray-300">
+          {imdbData.year || "Ano desconhecido"}
+        </span>
       </div>
     );
   };
 
+  // Renderiza a classificação do anime
   const renderRating = () => {
-    if (!imdbData?.rating || imdbData.rating === "N/A") return null;
+    if (!imdbData || !imdbData.rating || imdbData.rating === "N/A") return null;
+
     return (
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-400">Rating:</span>
-        <div className="flex items-center gap-1">
-          <span className="text-yellow-400">⭐</span>
-          <span className="text-white font-medium">{imdbData.rating}/10</span>
-          {imdbData.imdbVotes && (
-            <span className="text-gray-400">({imdbData.imdbVotes} votes)</span>
-          )}
-        </div>
+      <div className="flex items-center gap-2">
+        <AiFillStar size={20} className="text-yellow-400 shrink-0" />
+        <span className="text-gray-300">{imdbData.rating}/10</span>
       </div>
     );
   };
 
+  // Renderiza os gêneros do anime
   const renderGenres = () => {
-    if (!imdbData?.genres?.length) return null;
+    if (!imdbData || !imdbData.genres || imdbData.genres.length === 0)
+      return null;
+
     return (
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-400">Genres:</span>
-        <div className="flex flex-wrap gap-2">
-          {imdbData.genres.map((genre) => (
-            <span key={genre} className="text-white">
-              {genre}
-            </span>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-2">
+        {imdbData.genres.map((genre) => (
+          <span
+            key={genre}
+            className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs"
+          >
+            {genre}
+          </span>
+        ))}
       </div>
     );
   };
@@ -246,83 +436,76 @@ export function Watch() {
         </div>
 
         {/* Content Container */}
-        <div className="max-w-[1200px] mx-auto relative">
-          <div className="px-6">
-            {/* Título e Metadados */}
-            <div className="pt-[35vh] pb-32">
-              <div className="space-y-4">
-                <h1 className="text-4xl font-bold text-white">
-                  {currentEpisode.title}
-                  {currentEpisode.episode && (
-                    <span className="block text-xl text-gray-300 mt-2">
-                      Episódio {currentEpisode.episode}
-                    </span>
-                  )}
-                </h1>
-
-                <div className="flex items-center gap-4 text-white text-sm">
-                  {imdbData ? (
-                    <>
-                      <span className="flex items-center gap-1">
-                        <SiImdb className="text-[#f3ce13] text-xl" />
-                        <span className="font-semibold">{imdbData.rating}</span>
-                      </span>
-                      <span>{imdbData.year}</span>
-                      <span className="flex items-center gap-1">
-                        <IoTimeOutline />
-                        {imdbData.duration}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex items-center gap-1">
-                        <AiFillStar className="text-yellow-400" />
-                        N/A
-                      </span>
-                      <span>--</span>
-                      <span className="flex items-center gap-1">
-                        <IoTimeOutline />
-                        --
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {imdbData?.genres.map((genre) => (
-                    <span
-                      key={genre}
-                      className="px-3 py-1 bg-white/10 text-white rounded-full text-sm"
-                    >
-                      {genre}
-                    </span>
-                  )) || (
-                    <span className="text-gray-400 text-sm">
-                      Carregando gêneros...
-                    </span>
-                  )}
-                </div>
-              </div>
+        <div className="max-w-[1200px] mx-auto px-6 py-8">
+          {/* Título e Informações */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {currentEpisode?.title || "Carregando..."}
+            </h1>
+            <div className="flex items-center gap-4 text-gray-400 text-sm">
+              <span className="flex items-center gap-1">
+                <BsPlayCircle />
+                Episódio {currentEpisode?.episode || "?"}
+              </span>
+              {imdbData?.rating && imdbData.rating !== "N/A" && (
+                <span className="flex items-center gap-1">
+                  <SiImdb className="text-yellow-400" />
+                  {imdbData.rating}/10
+                </span>
+              )}
             </div>
+          </div>
 
-            {/* Main Content Area */}
-            <div className="relative z-10 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Coluna Principal - Player e Informações */}
+            <div className="lg:col-span-2 space-y-6">
               {/* Video Player */}
               <div className="aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
-                {currentEpisode.playerUrl &&
-                  (currentEpisode.playerUrl.includes("http") ? (
+                {currentEpisode?.playerUrl ? (
+                  <>
                     <iframe
                       src={currentEpisode.playerUrl}
                       className="w-full h-full"
                       allowFullScreen
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      onLoad={() => {
+                        console.log(
+                          "🎥 Iframe carregado, tentando salvar progresso"
+                        );
+                        if (!alreadySaved) {
+                          saveProgress();
+                        }
+                      }}
                     />
-                  ) : (
-                    <VideoPlayer
-                      url={currentEpisode.playerUrl}
-                      title={currentEpisode.title}
-                    />
-                  ))}
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          console.log(
+                            "🎯 Botão 'Marcar como assistido' clicado"
+                          );
+                          saveProgress();
+                        }}
+                        className={`px-4 py-2 ${
+                          alreadySaved
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-purple-600 hover:bg-purple-700"
+                        } text-white rounded transition-colors`}
+                        disabled={isSaving}
+                      >
+                        {isSaving
+                          ? "Salvando..."
+                          : alreadySaved
+                          ? "Episódio assistido ✓"
+                          : "Marcar como assistido"}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white">
+                    Carregando player...
+                  </div>
+                )}
               </div>
 
               {/* Overview Section */}
@@ -341,50 +524,62 @@ export function Watch() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Details Section */}
                 <Section
-                  title="Details"
+                  title="Detalhes"
                   isOpen={isDetailsOpen}
                   onToggle={() => setIsDetailsOpen(!isDetailsOpen)}
                   icon={<BsListUl size={20} className="text-purple-400" />}
                 >
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {renderStatus()}
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-400">Release Date:</span>
-                      <span className="text-white">
-                        {imdbData?.released || imdbData?.year || "--"}
-                      </span>
-                    </div>
                     {renderRating()}
                     {renderGenres()}
+                    {imdbData?.duration && imdbData.duration !== "N/A" && (
+                      <div className="flex items-center gap-2">
+                        <IoTimeOutline
+                          size={20}
+                          className="text-purple-400 shrink-0"
+                        />
+                        <span className="text-gray-300">
+                          {imdbData.duration}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </Section>
 
                 {/* Cast Section */}
                 {imdbData?.actors && imdbData.actors.length > 0 && (
                   <Section
-                    title="Cast"
-                    isOpen={true}
-                    onToggle={() => {}}
+                    title="Elenco"
+                    isOpen={isDetailsOpen}
+                    onToggle={() => setIsDetailsOpen(!isDetailsOpen)}
                     icon={<BsPeople size={20} className="text-purple-400" />}
                   >
-                    <div className="grid grid-cols-1 gap-4">
-                      {imdbData.actors.map((actor) => (
-                        <div key={actor} className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-purple-400/10 flex items-center justify-center">
-                            <BsPerson size={24} className="text-purple-400" />
-                          </div>
-                          <div>
-                            <div className="text-white font-medium">
-                              {actor}
-                            </div>
-                            <div className="text-gray-400 text-sm">Actor</div>
-                          </div>
+                    <div className="space-y-3">
+                      {imdbData.actors.map((actor, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <BsPerson
+                            size={20}
+                            className="text-purple-400 shrink-0"
+                          />
+                          <span className="text-gray-300">{actor}</span>
                         </div>
                       ))}
                     </div>
                   </Section>
                 )}
               </div>
+            </div>
+
+            {/* Coluna Lateral - Poster */}
+            <div>
+              {imdbData?.poster && (
+                <img
+                  src={imdbData.poster}
+                  alt={`Poster de ${currentEpisode?.title || "anime"}`}
+                  className="w-full rounded-lg shadow-lg"
+                />
+              )}
             </div>
           </div>
         </div>

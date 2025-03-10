@@ -5,13 +5,27 @@ import {
   AnimeDetails,
   AnimeResponse,
   AnimeListItem,
+  WatchHistory,
+  WatchHistoryResponse,
+  AnimeWatchStatus,
 } from "../types/anime";
 
 const axiosInstance = axios.create({
-  baseURL: "https://server-meuanime-production.up.railway.app/api",
+  baseURL: import.meta.env.DEV
+    ? "http://localhost:3000/api"
+    : "https://server-meuanime-production.up.railway.app/api",
 });
 
-// https://server-meuanime-production.up.railway.app
+// Adiciona o token de autenticação em todas as requisições
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem("@meuanime:token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
 
 //https://animeshd.to
 
@@ -285,5 +299,150 @@ export const api = {
           ? "No trending data available"
           : undefined,
     }));
+  },
+
+  getUserWatchHistory: async (
+    userId: string
+  ): Promise<WatchHistoryResponse[]> => {
+    try {
+      console.log("📝 Fetching watch history for user:", userId);
+      const response = await axiosInstance.get<WatchHistoryResponse[]>(
+        `/watch-history/${userId}`
+      );
+      console.log("✅ Watch history fetched successfully:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Error fetching watch history:", {
+        error,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+      });
+      throw error;
+    }
+  },
+
+  createOrUpdateWatchHistory: async (
+    watchData: WatchHistory
+  ): Promise<WatchHistoryResponse> => {
+    try {
+      console.log("📝 Creating/updating watch history:", watchData);
+
+      // Verificar se todos os campos necessários estão presentes
+      if (!watchData.user_id) {
+        console.error("❌ Missing user_id in watch data");
+        throw new Error("Missing user_id in watch data");
+      }
+
+      if (!watchData.anime_id) {
+        console.error("❌ Missing anime_id in watch data");
+        throw new Error("Missing anime_id in watch data");
+      }
+
+      if (
+        watchData.episode_number === undefined ||
+        watchData.episode_number === null
+      ) {
+        console.error("❌ Missing episode_number in watch data");
+        throw new Error("Missing episode_number in watch data");
+      }
+
+      // Verificar se episode_number é um número válido
+      if (isNaN(Number(watchData.episode_number))) {
+        console.error(
+          "❌ Invalid episode_number in watch data:",
+          watchData.episode_number
+        );
+        throw new Error(`Invalid episode_number: ${watchData.episode_number}`);
+      }
+
+      // Fazer a requisição POST
+      console.log(
+        "🔄 Sending POST request to /watch-history with data:",
+        watchData
+      );
+      const response = await axiosInstance.post<WatchHistoryResponse>(
+        "/watch-history",
+        watchData
+      );
+
+      console.log(
+        "✅ Watch history created/updated successfully:",
+        response.data
+      );
+      return response.data;
+    } catch (error: any) {
+      // Verificar se é um erro de duplicação
+      if (
+        error.response?.status === 400 &&
+        error.response?.data?.error?.includes("duplicate key value")
+      ) {
+        console.log(
+          "ℹ️ Episódio já está no histórico, não é necessário salvar novamente"
+        );
+
+        // Buscar o registro existente para retornar
+        try {
+          const existingRecords = await axiosInstance.get<
+            WatchHistoryResponse[]
+          >(`/watch-history/${watchData.user_id}`);
+
+          const existingRecord = existingRecords.data.find(
+            (record) =>
+              record.anime_id === watchData.anime_id &&
+              record.episode_number === watchData.episode_number
+          );
+
+          if (existingRecord) {
+            return existingRecord;
+          }
+        } catch (fetchError) {
+          console.error("❌ Error fetching existing record:", fetchError);
+        }
+
+        // Se não conseguir buscar o registro existente, cria um mock
+        return {
+          id: "existing-record",
+          user_id: watchData.user_id,
+          anime_id: watchData.anime_id,
+          episode_number: watchData.episode_number,
+          progress_percentage: watchData.progress_percentage,
+          watched_at: watchData.watched_at,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      }
+
+      console.error("❌ Error creating/updating watch history:", {
+        error,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+        watchData,
+      });
+      throw error;
+    }
+  },
+
+  getAnimeWatchStatus: async (
+    userId: string,
+    animeId: string
+  ): Promise<AnimeWatchStatus> => {
+    try {
+      console.log("📝 Fetching anime watch status:", { userId, animeId });
+      const response = await axiosInstance.get<AnimeWatchStatus>(
+        `/watch-history/${userId}/${animeId}`
+      );
+      console.log("✅ Anime watch status fetched successfully:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Error fetching anime watch status:", {
+        error,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+      });
+      throw error;
+    }
   },
 };

@@ -77,3 +77,28 @@ export interface AnimeListItem {
 export type ProviderAnimeResult = Omit<ProviderResult<AnimeEpisode>, "data"> & {
   data: AnimeListItem[] | null;
 };
+
+export interface WatchHistory {
+  user_id: string;
+  anime_id: string;
+  episode_number: number;
+  progress_percentage: number;
+  watched_at: string;
+}
+
+export interface WatchHistoryResponse {
+  id: string;
+  user_id: string;
+  anime_id: string;
+  episode_number: number;
+  progress_percentage: number;
+  watched_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AnimeWatchStatus {
+  lastWatchedEpisode: number;
+  progress_percentage: number;
+  watched_at: string;
+}
