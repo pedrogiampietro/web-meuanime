@@ -1,11 +1,6 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
-import {
-  WatchHistory,
-  WatchHistoryResponse,
-  AnimeWatchStatus,
-} from "../types/anime";
+import { WatchHistory, AnimeWatchStatus } from "../types/anime";
 import { useStore } from "../store/useStore";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-hot-toast";

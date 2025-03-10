@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useWatchHistory } from "../hooks/useWatchHistory";
-import { useNavigate } from "react-router-dom";
+
 import { useAnalytics } from "../hooks/useAnalytics";
 import { IoTimeOutline } from "react-icons/io5";
 import { BsPlayCircle } from "react-icons/bs";
@@ -12,7 +12,6 @@ import { Auth } from "../components/Auth";
 export function WatchHistory() {
   const { watchHistory, isLoadingHistory } = useWatchHistory();
   const { trackPageView } = useAnalytics();
-  const navigate = useNavigate();
   const { user } = useStore();
 
   useEffect(() => {
@@ -51,7 +50,7 @@ export function WatchHistory() {
           Histórico de Visualização
         </h1>
 
-        {!watchHistory?.watchHistory?.length ? (
+        {!watchHistory || watchHistory.length === 0 ? (
           <div className="bg-[#1a1d29] rounded-lg p-8 text-center">
             <p className="text-gray-400 text-lg">
               Você ainda não assistiu nenhum episódio.
@@ -59,7 +58,7 @@ export function WatchHistory() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {watchHistory.watchHistory.map((item) => (
+            {watchHistory.map((item) => (
               <div
                 key={`${item.anime_id}-${item.episode_number}`}
                 className="bg-[#1a1d29] rounded-lg overflow-hidden hover:bg-white/5 transition-colors"

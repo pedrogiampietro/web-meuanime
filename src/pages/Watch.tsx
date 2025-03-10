@@ -1,6 +1,6 @@
 import { Navigate, useParams } from "react-router-dom";
 import { useEpisodeStore } from "../store/episodeStore";
-import { VideoPlayer } from "../components/player/VideoPlayer";
+
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useEffect, useState } from "react";
 import { AiFillStar } from "react-icons/ai";
@@ -77,12 +77,8 @@ export function Watch() {
   const [imdbData, setImdbData] = useState<IMDBData | null>(null);
   const params = useParams();
   const episodeId = params.episodeId;
-  const {
-    updateWatchHistory,
-    isFullyAuthenticated,
-    isEpisodeInHistory,
-    watchHistory,
-  } = useWatchHistory();
+  const { isFullyAuthenticated, isEpisodeInHistory, watchHistory } =
+    useWatchHistory();
   const { user } = useStore();
   const { user: authUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
