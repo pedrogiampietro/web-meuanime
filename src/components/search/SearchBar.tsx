@@ -3,13 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import { SearchResult } from "../../types/anime";
 import { useDebounce } from "../../hooks/useDebounce";
+import { Search } from "lucide-react";
 
 export function SearchBar() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const searchAnimes = useCallback(async (searchQuery: string) => {
@@ -43,6 +46,20 @@ export function SearchBar() {
     setQuery("");
     setResults([]);
     setIsOpen(false);
+    setIsExpanded(false);
+  };
+
+  const toggleSearch = () => {
+    setIsExpanded(!isExpanded);
+    if (!isExpanded) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    } else {
+      setQuery("");
+      setResults([]);
+      setIsOpen(false);
+    }
   };
 
   // Close search results when clicking outside
@@ -53,34 +70,53 @@ export function SearchBar() {
         !searchRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
+        if (query === "") {
+          setIsExpanded(false);
+        }
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [query]);
 
   return (
-    <div className="relative w-full max-w-2xl" ref={searchRef}>
-      <div className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={handleSearch}
-          onFocus={() => results.length > 0 && setIsOpen(true)}
-          placeholder="Buscar animes..."
-          className="w-full px-4 py-3 bg-zax-bg rounded-lg text-zax-text focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200 placeholder:text-zax-text/50"
+    <div className="relative" ref={searchRef}>
+      <div className="relative flex items-center">
+        <button
+          onClick={toggleSearch}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-500/10 hover:bg-purple-500/20 transition-all duration-200"
           aria-label="Buscar animes"
-        />
-        {isLoading && (
+        >
+          <Search size={20} className="text-purple-400" />
+        </button>
+
+        <div
+          className={`overflow-hidden transition-all duration-200 ${
+            isExpanded ? "w-[300px] ml-2 opacity-100" : "w-0 opacity-0"
+          }`}
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={handleSearch}
+            onFocus={() => results.length > 0 && setIsOpen(true)}
+            placeholder="Buscar animes..."
+            className="w-full px-4 py-2 bg-purple-500/10 rounded-lg text-zax-text focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200 placeholder:text-zax-text/50"
+            aria-label="Campo de busca"
+          />
+        </div>
+
+        {isLoading && isExpanded && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
       </div>
 
-      {results.length > 0 && isOpen && (
-        <div className="absolute w-full mt-2 bg-zax-bg/95 backdrop-blur-lg rounded-lg overflow-hidden z-50 border border-purple-500/20 shadow-lg transform transition-all duration-200 ease-in-out">
+      {isOpen && results.length > 0 && (
+        <div className="absolute right-0 w-[400px] mt-2 bg-zax-bg/95 backdrop-blur-lg rounded-lg overflow-hidden z-50 border border-purple-500/20 shadow-lg transform transition-all duration-200 ease-in-out">
           <div className="max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-track-zax-bg scrollbar-thumb-purple-500/20 hover:scrollbar-thumb-purple-500/30">
             {results.map((result) => (
               <div

@@ -14,10 +14,16 @@ import {
 
 export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const favorites = useAppSelector((state) => state.favorites.items);
   const { trending, loading } = useTrendingAnimes();
+
+  // Reset image loaded state when changing slides
+  useEffect(() => {
+    setIsImageLoaded(false);
+  }, [currentIndex]);
 
   // Auto-play
   useEffect(() => {
@@ -27,7 +33,7 @@ export function HeroSlider() {
           (current) => (current + 1) % Math.min(3, trending.length)
         );
       }
-    }, 5000);
+    }, 8000); // Increased time to 8s for better user experience
 
     return () => clearInterval(timer);
   }, [trending]);
@@ -39,7 +45,7 @@ export function HeroSlider() {
   const heroItems = trending.slice(0, 3).map((anime) => ({
     id: anime.slug,
     title: anime.title,
-    description: "",
+    description: "Assista agora este incrível anime!",
     imageUrl: anime.image,
     type: anime.type,
     rating: "All",
@@ -47,9 +53,7 @@ export function HeroSlider() {
   }));
 
   const currentItem = heroItems[currentIndex];
-  if (!currentItem) {
-    return null;
-  }
+  if (!currentItem) return null;
 
   const animeId = `anime_${currentItem.id}`;
   const isFavorite = favorites.some((item) => item.id === animeId);
@@ -89,70 +93,117 @@ export function HeroSlider() {
   };
 
   return (
-    <div className="relative h-[600px] overflow-hidden group">
+    <div className="relative h-[70vh] min-h-[600px] max-h-[800px] overflow-hidden group">
       <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={currentIndex}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            transition: { duration: 0.7, ease: "easeOut" },
+          }}
+          exit={{ opacity: 0, scale: 1.05 }}
           className="absolute inset-0"
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-zax-bg via-transparent to-transparent" />
-          <img
-            src={currentItem.imageUrl}
-            alt={currentItem.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute bottom-0 left-0 p-8 max-w-2xl">
-            <h1 className="text-4xl font-bold text-white mb-2">
-              {currentItem.title}
-            </h1>
-            <p className="text-zax-text mb-6">{currentItem.description}</p>
-            <div className="flex gap-4">
-              <button
-                onClick={handlePlay}
-                className="flex items-center gap-2 bg-zax-primary text-white px-6 py-3 rounded-lg hover:bg-zax-primary/90 transition-colors"
-              >
-                <FaPlay />
-                <span>Assistir</span>
-              </button>
-              <button
-                onClick={handleToggleFavorite}
-                className="flex items-center justify-center w-12 h-12 bg-zax-button text-white rounded-lg hover:bg-zax-primary transition-colors"
-              >
-                {isFavorite ? <MdFavorite /> : <MdFavoriteBorder />}
-              </button>
-            </div>
+          {/* Overlay gradients for better text visibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-zax-bg via-zax-bg/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-zax-bg/90 via-transparent to-transparent" />
+
+          {/* Main hero image */}
+          <div className="relative h-full">
+            <img
+              src={currentItem.imageUrl}
+              alt={currentItem.title}
+              onLoad={() => setIsImageLoaded(true)}
+              className={`w-full h-full object-cover transform scale-105 transition-transform duration-10000 ease-out ${
+                isImageLoaded ? "scale-100" : "scale-105"
+              }`}
+              style={{ objectPosition: "center 20%" }}
+            />
           </div>
+
+          {/* Content Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="absolute bottom-0 left-0 p-8 max-w-2xl"
+          >
+            <div className="space-y-4">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="text-5xl font-bold text-white mb-2 leading-tight"
+              >
+                {currentItem.title}
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="text-lg text-gray-200 mb-6 line-clamp-2"
+              >
+                {currentItem.description}
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="flex gap-4"
+              >
+                <button
+                  onClick={handlePlay}
+                  className="flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
+                >
+                  <FaPlay className="text-lg" />
+                  <span className="font-semibold">Assistir</span>
+                </button>
+                <button
+                  onClick={handleToggleFavorite}
+                  className="flex items-center justify-center w-14 h-14 bg-purple-600/20 hover:bg-purple-600/30 text-white rounded-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  {isFavorite ? (
+                    <MdFavorite className="text-2xl text-purple-500" />
+                  ) : (
+                    <MdFavoriteBorder className="text-2xl" />
+                  )}
+                </button>
+              </motion.div>
+            </div>
+          </motion.div>
         </motion.div>
       </AnimatePresence>
 
       {/* Navigation Buttons */}
-      <button
-        onClick={handlePrevious}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <IoIosArrowBack size={24} />
-      </button>
-      <button
-        onClick={handleNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <IoIosArrowForward size={24} />
-      </button>
+      <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-4 pointer-events-none">
+        <button
+          onClick={handlePrevious}
+          className="pointer-events-auto p-2 rounded-full bg-black/30 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-purple-600/50 transform hover:scale-110"
+        >
+          <IoIosArrowBack size={28} />
+        </button>
+        <button
+          onClick={handleNext}
+          className="pointer-events-auto p-2 rounded-full bg-black/30 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-purple-600/50 transform hover:scale-110"
+        >
+          <IoIosArrowForward size={28} />
+        </button>
+      </div>
 
       {/* Dots Indicator */}
-      <div className="absolute bottom-4 right-4 flex gap-2">
-        {heroItems.map((_: unknown, index: number) => (
+      <div className="absolute bottom-6 right-8 flex gap-2">
+        {heroItems.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all ${
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
               index === currentIndex
-                ? "bg-zax-primary w-4"
-                : "bg-white/50 hover:bg-white"
+                ? "w-6 bg-purple-500"
+                : "bg-white/50 hover:bg-white/80"
             }`}
           />
         ))}
