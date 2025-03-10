@@ -6,6 +6,7 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { useTrendingAnimes } from "../../hooks/useTrendingAnimes";
 import { useNavigate } from "react-router-dom";
+import { generateSlug } from "../../utils/stringUtils";
 
 import {
   addToFavorites,
@@ -20,7 +21,6 @@ export function HeroSlider() {
   const favorites = useAppSelector((state) => state.favorites.items);
   const { trending, loading } = useTrendingAnimes();
 
-  // Reset image loaded state when changing slides
   useEffect(() => {
     setIsImageLoaded(false);
   }, [currentIndex]);
@@ -33,7 +33,7 @@ export function HeroSlider() {
           (current) => (current + 1) % Math.min(3, trending.length)
         );
       }
-    }, 8000); // Increased time to 8s for better user experience
+    }, 8000);
 
     return () => clearInterval(timer);
   }, [trending]);
@@ -55,8 +55,8 @@ export function HeroSlider() {
   const currentItem = heroItems[currentIndex];
   if (!currentItem) return null;
 
-  const animeId = `anime_${currentItem.id}`;
-  const isFavorite = favorites.some((item) => item.id === animeId);
+  const generatedId = generateSlug(currentItem.title, currentItem.year);
+  const isFavorite = favorites.some((item) => item.id === generatedId);
 
   const handlePrevious = () => {
     setCurrentIndex(
@@ -70,16 +70,16 @@ export function HeroSlider() {
 
   const handleToggleFavorite = () => {
     if (isFavorite) {
-      dispatch(removeFromFavorites(animeId));
+      dispatch(removeFromFavorites(generatedId));
     } else {
       dispatch(
         addToFavorites({
-          id: animeId,
+          id: generatedId,
           title: currentItem.title,
           imageUrl: currentItem.imageUrl || "",
           type: "animes",
           rating: currentItem.type || "All",
-          year: String(new Date().getFullYear()),
+          year: currentItem.year,
         })
       );
     }
@@ -93,7 +93,7 @@ export function HeroSlider() {
   };
 
   return (
-    <div className="relative h-[70vh] min-h-[600px] max-h-[800px] overflow-hidden group">
+    <div className="relative h-[70vh] min-h-[600px] max-h-[800px] overflow-hidden group mt-16">
       <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={currentIndex}

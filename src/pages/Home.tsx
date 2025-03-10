@@ -130,8 +130,8 @@ export function Home() {
 
   return (
     <div className="w-full">
+      <HeroSlider />
       <div className="px-4 md:px-16 pt-20 space-y-8">
-        <HeroSlider />
         <FeaturedSection />
 
         {/* Latest Episodes Section */}
